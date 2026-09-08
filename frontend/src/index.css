@@ -1,7 +1,87 @@
 @import "tailwindcss";
 
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
 @theme {
   --color-navy-900: #0A1420;
   --color-navy-800: #0F2138;
   --color-navy-700: #173352;
+  --color-navy-600: #1F4570;
+
+  --color-ink: #111B26;
+  --color-ink-soft: #3B4856;
+  --color-muted: #6B7686;
+  --color-faint: #98A2AE;
+
+  --color-paper: #EEF1F4;
+  --color-surface: #FFFFFF;
+
+  --color-border: #DCE2E8;
+  --color-border-soft: #E7EBEF;
+
+  --color-amber: #A9661D;
+  --color-amber-bg: #FBF0DF;
+  --color-amber-line: #E7C48F;
+
+  --color-red: #A6332C;
+  --color-red-bg: #FAEAE8;
+  --color-red-line: #E3B4AF;
+
+  --color-green: #2A6E4E;
+  --color-green-bg: #E7F3EC;
+  --color-green-line: #AFD8C3;
+
+  --color-blue: #2A5C8A;
+  --color-blue-bg: #E9F1F8;
+  --color-blue-line: #B9D2E8;
+
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --radius: 6px;
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-lg: calc(var(--radius) + 2px);
+
+  --shadow-sm: 0 1px 2px rgba(10, 20, 32, 0.06);
+  --shadow-md: 0 4px 16px rgba(10, 20, 32, 0.08);
+
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-ink);
+
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-ink);
+
+  --color-primary: var(--color-navy-800);
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: var(--color-paper);
+  --color-secondary-foreground: var(--color-ink-soft);
+
+  --color-muted-component: var(--color-paper);
+  --color-muted-foreground: var(--color-muted);
+
+  --color-accent: var(--color-paper);
+  --color-accent-foreground: var(--color-ink-soft);
+
+  --color-destructive: var(--color-red);
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-border-component: var(--color-border);
+  --color-input: var(--color-border);
+  --color-ring: var(--color-navy-600);
+}
+
+@layer base {
+  * {
+    @apply border-border-component;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased text-[14px] leading-relaxed;
+  }
 }

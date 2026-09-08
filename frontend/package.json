@@ -1,5 +1,5 @@
 {
-  "name": "temp_app",
+  "name": "rmos-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -20,6 +20,8 @@
     "@vitejs/plugin-react": "^6.1.0",
     "oxlint": "^1.79.0",
     "typescript": "~6.0.2",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "tailwindcss": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.3"
   }
 }

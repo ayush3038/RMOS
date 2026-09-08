@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RAILSYNC — AI-Powered Railway Maintenance Block Planning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-900:#0A1420;
+  --navy-800:#0F2138;
+  --navy-700:#173352;
+  --navy-600:#1F4570;
+  --ink:#111B26;
+  --ink-soft:#3B4856;
+  --muted:#6B7686;
+  --faint:#98A2AE;
+  --paper:#EEF1F4;
+  --surface:#FFFFFF;
+  --border:#DCE2E8;
+  --border-soft:#E7EBEF;
+  --amber:#A9661D;
+  --amber-bg:#FBF0DF;
+  --amber-line:#E7C48F;
+  --red:#A6332C;
+  --red-bg:#FAEAE8;
+  --red-line:#E3B4AF;
+  --green:#2A6E4E;
+  --green-bg:#E7F3EC;
+  --green-line:#AFD8C3;
+  --blue:#2A5C8A;
+  --blue-bg:#E9F1F8;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  --radius: 6px;
+  --shadow-sm: 0 1px 2px rgba(10,20,32,0.06);
+  --shadow-md: 0 4px 16px rgba(10,20,32,0.08);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  font-family:var(--sans);
+  background:var(--paper);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  font-size:14px;
+  line-height:1.5;
+}
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;font-size:13px;}
+::selection{background:var(--navy-600);color:#fff;}
+a{color:inherit;}
+.mono{font-family:var(--mono);}
+
+/* ---------- App shell ---------- */
+#app{display:flex;height:100vh;overflow:hidden;}
+
+.sidebar{
+  width:236px;flex-shrink:0;background:var(--navy-900);color:#C9D4DF;
+  display:flex;flex-direction:column;
+  border-right:1px solid #08111C;
+  transition:transform .25s ease;
+  z-index:60;
+}
+.sidebar-brand{
+  padding:20px 18px 16px 18px;border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.sidebar-brand .logo{
+  display:flex;align-items:center;gap:9px;
+}
+.sidebar-brand .mark{
+  width:28px;height:28px;border-radius:5px;background:linear-gradient(155deg,#2A5C8A,#173352);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sidebar-brand .mark svg{width:16px;height:16px;}
+.sidebar-brand .name{font-weight:700;font-size:15.5px;letter-spacing:0.2px;color:#fff;}
+.sidebar-brand .tag{font-size:10.5px;color:#8CA0B3;margin-top:2px;letter-spacing:.3px;text-transform:uppercase;}
+
+.sidebar-nav{flex:1;overflow-y:auto;padding:10px 10px;}
+.nav-section-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:#5E7086;padding:14px 10px 6px;font-weight:600;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:5px;
+  color:#AEBDCC;font-size:13.2px;font-weight:500;margin-bottom:1px;
+  border-left:2px solid transparent;
+}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.85;}
+.nav-item:hover{background:rgba(255,255,255,0.045);color:#fff;}
+.nav-item.active{background:rgba(42,92,138,0.28);color:#fff;border-left:2px solid #4F8FC4;}
+.nav-item.active svg{opacity:1;}
+
+.sidebar-bottom{border-top:1px solid rgba(255,255,255,0.06);padding:10px;}
+.sidebar-user{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:5px;}
+.sidebar-user:hover{background:rgba(255,255,255,0.045);}
+.avatar{width:26px;height:26px;border-radius:50%;background:#2A5C8A;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sidebar-user .who{font-size:12.5px;color:#D5DEE7;font-weight:600;}
+.sidebar-user .role{font-size:11px;color:#7A8B9C;}
+
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(6,12,20,.45);z-index:55;}
+
+/* ---------- Main column ---------- */
+.main-col{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh;}
+
+.topbar{
+  height:56px;flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:14px;
+}
+.topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
+.hamburger{display:none;background:none;border:none;padding:4px;color:var(--ink-soft);}
+.hamburger svg{width:20px;height:20px;}
+.crumb{display:flex;flex-direction:column;min-width:0;}
+.crumb .div-name{font-size:12.5px;font-weight:600;color:var(--ink);}
+.crumb .meta{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sim-badge{
+  display:inline-flex;align-items:center;gap:5px;background:var(--amber-bg);color:var(--amber);
+  border:1px solid var(--amber-line);font-size:10.5px;font-weight:700;letter-spacing:.4px;
+  padding:3px 8px;border-radius:20px;text-transform:uppercase;flex-shrink:0;
+}
+.sim-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);}
+.topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.icon-btn{
+  width:32px;height:32px;border-radius:6px;border:1px solid transparent;background:none;
+  display:flex;align-items:center;justify-content:center;color:var(--ink-soft);position:relative;
+}
+.icon-btn:hover{background:var(--paper);border-color:var(--border);}
+.icon-btn svg{width:17px;height:17px;}
+.icon-btn .badge-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--red);border:1.5px solid #fff;}
+.topbar-profile{display:flex;align-items:center;gap:8px;padding-left:8px;border-left:1px solid var(--border);margin-left:4px;}
+
+.content{flex:1;overflow-y:auto;padding:20px 24px 40px;}
+.content-inner{max-width:1480px;margin:0 auto;}
+
+/* ---------- Page header ---------- */
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
+.page-head h1{font-size:20px;font-weight:700;margin:0 0 3px;color:var(--ink);letter-spacing:-0.2px;}
+.page-head p{margin:0;color:var(--muted);font-size:13px;}
+.page-actions{display:flex;gap:8px;flex-shrink:0;}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;border-radius:5px;border:1px solid var(--border);
+  background:var(--surface);color:var(--ink-soft);font-size:12.5px;font-weight:600;padding:7px 12px;
+  white-space:nowrap;
+}
+.btn:hover{border-color:#C4CCD4;background:var(--paper);}
+.btn svg{width:14px;height:14px;}
+.btn-primary{background:var(--navy-800);border-color:var(--navy-800);color:#fff;}
+.btn-primary:hover{background:var(--navy-700);border-color:var(--navy-700);}
+.btn-sm{padding:5px 9px;font-size:11.5px;}
+.btn-danger-outline{border-color:var(--red-line);color:var(--red);background:var(--red-bg);}
+.btn-green-outline{border-color:var(--green-line);color:var(--green);background:var(--green-bg);}
+
+/* ---------- KPI cards ---------- */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+.kpi-card .label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+.kpi-card .value{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:5px;color:var(--ink);}
+.kpi-card .sub{font-size:11px;margin-top:3px;color:var(--muted);}
+.kpi-card .sub.up{color:var(--green);}
+.kpi-card .sub.down{color:var(--red);}
+.kpi-card.crit .value{color:var(--red);}
+.kpi-card.warn .value{color:var(--amber);}
+.kpi-card.good .value{color:var(--green);}
+
+/* ---------- Generic card / panel ---------- */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;}
+.panel-head{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--border-soft);}
+.panel-head h3{font-size:13.5px;font-weight:700;margin:0;color:var(--ink);}
+.panel-head .desc{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.panel-body{padding:16px;}
+.grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+
+/* ---------- Status chips ---------- */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2.5px 8px;border-radius:20px;border:1px solid transparent;white-space:nowrap;}
+.chip-green{background:var(--green-bg);color:var(--green);border-color:var(--green-line);}
+.chip-amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-line);}
+.chip-red{background:var(--red-bg);color:var(--red);border-color:var(--red-line);}
+.chip-grey{background:#EEF1F4;color:var(--muted);border-color:var(--border);}
+.chip-blue{background:var(--blue-bg);color:var(--blue);border-color:#B9D2E8;}
+.chip::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* ---------- Table ---------- */
+.table-toolbar{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border-soft);flex-wrap:wrap;align-items:center;}
+.search-box{position:relative;flex:1;min-width:160px;max-width:280px;}
+.search-box svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--faint);}
+.search-box input{width:100%;padding:6.5px 10px 6.5px 28px;border:1px solid var(--border);border-radius:5px;font-size:12.5px;background:var(--paper);}
+.search-box input:focus{outline:none;border-color:var(--navy-600);background:#fff;}
+.filter-select{padding:6.5px 9px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--paper);color:var(--ink-soft);}
+.filter-select:focus{outline:none;border-color:var(--navy-600);}
+.result-count{font-size:11.5px;color:var(--muted);margin-left:auto;flex-shrink:0;}
+
+.table-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px;}
+thead th{
+  text-align:left;padding:9px 14px;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;
+  color:var(--muted);font-weight:700;background:#FAFBFC;border-bottom:1px solid var(--border);white-space:nowrap;
+  cursor:pointer;user-select:none;
+}
+thead th:hover{color:var(--ink-soft);}
+thead th .sort-arrow{font-size:9px;margin-left:3px;color:var(--faint);}
+tbody td{padding:9px 14px;border-bottom:1px solid var(--border-soft);color:var(--ink-soft);white-space:nowrap;}
+tbody tr{cursor:pointer;}
+tbody tr:hover{background:#F7F9FA;}
+tbody td.id-cell{font-family:var(--mono);font-weight:600;color:var(--ink);}
+.no-results{padding:36px 16px;text-align:center;color:var(--muted);font-size:12.5px;}
+
+/* Cards fallback for mobile tables */
+.record-cards{display:none;}
+.record-card{border-bottom:1px solid var(--border-soft);padding:12px 16px;}
+.record-card .rc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.record-card .rc-id{font-family:var(--mono);font-weight:700;font-size:12.5px;}
+.record-card .rc-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:11.5px;color:var(--ink-soft);}
+.record-card .rc-grid span{color:var(--muted);}
+
+/* ---------- Corridor / Gantt visualization (signature element) ---------- */
+.corridor-track{margin-bottom:2px;}
+.corridor-row{display:flex;align-items:center;gap:10px;padding:7px 0;}
+.corridor-label{width:96px;flex-shrink:0;font-size:11.5px;font-weight:700;color:var(--ink-soft);font-family:var(--mono);}
+.corridor-lane{position:relative;flex:1;height:26px;background:repeating-linear-gradient(90deg,#F2F4F6,#F2F4F6 calc(100%/24 - 1px),#E4E9ED calc(100%/24 - 1px),#E4E9ED calc(100%/24));border-radius:4px;overflow:hidden;border:1px solid var(--border-soft);}
+.corridor-seg{position:absolute;top:2px;bottom:2px;border-radius:3px;font-size:9.5px;color:#fff;display:flex;align-items:center;padding:0 6px;overflow:hidden;font-weight:600;white-space:nowrap;}
+.seg-available{background:#CFE6D9;}
+.seg-maintenance{background:#D79A55;}
+.seg-train{background:#4F8FC4;}
+.seg-critical{background:#C0645D;}
+.corridor-axis{display:flex;padding-left:106px;font-size:9.5px;color:var(--faint);font-family:var(--mono);margin-top:2px;}
+.corridor-axis span{flex:1;text-align:left;}
+.corridor-legend{display:flex;gap:14px;flex-wrap:wrap;padding:10px 16px 2px;font-size:11px;color:var(--muted);}
+.corridor-legend .lg-item{display:flex;align-items:center;gap:5px;}
+.corridor-legend .sw{width:10px;height:10px;border-radius:2px;}
+
+/* ---------- Network map (dashboard) ---------- */
+.network-wrap{display:flex;flex-direction:column;gap:8px;}
+.network-section{display:flex;align-items:center;gap:12px;}
+.ns-name{width:78px;font-size:11.5px;font-weight:700;font-family:var(--mono);flex-shrink:0;}
+.ns-bar{flex:1;height:16px;border-radius:3px;position:relative;display:flex;overflow:hidden;border:1px solid var(--border-soft);}
+.ns-seg{height:100%;}
+.ns-status{width:96px;text-align:right;flex-shrink:0;}
+
+/* ---------- Planner ---------- */
+.planner-form{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11px;font-weight:600;color:var(--ink-soft);}
+.field select,.field input{padding:7px 9px;border:1px solid var(--border);border-radius:5px;font-size:12.5px;background:#fff;}
+.field select:focus,.field input:focus{outline:none;border-color:var(--navy-600);}
+
+.gen-progress{display:none;padding:20px 16px;}
+.gen-step{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:12.5px;color:var(--faint);}
+.gen-step .gs-icon{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.gen-step.active{color:var(--ink);}
+.gen-step.active .gs-icon{border-color:var(--navy-600);}
+.gen-step.done{color:var(--ink-soft);}
+.gen-step.done .gs-icon{border-color:var(--green);background:var(--green);}
+.gen-step.done .gs-icon svg{width:10px;height:10px;color:#fff;}
+.spin{width:9px;height:9px;border-radius:50%;border:1.6px solid var(--navy-600);border-top-color:transparent;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.before-after{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.ba-col{border:1px solid var(--border);border-radius:6px;padding:14px;}
+.ba-col.after{border-color:var(--green-line);background:var(--green-bg);}
+.ba-col h4{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);}
+.ba-col.after h4{color:var(--green);}
+.ba-metric{display:flex;justify-content:space-between;padding:5px 0;font-size:12.5px;border-bottom:1px dashed var(--border-soft);}
+.ba-metric b{font-family:var(--mono);}
+
+.dept-coord{display:flex;flex-direction:column;gap:10px;}
+.dept-req{display:flex;align-items:center;gap:12px;padding:9px 12px;background:var(--paper);border-radius:5px;border:1px solid var(--border-soft);}
+.dept-req .dr-dept{width:110px;font-weight:700;font-size:12px;flex-shrink:0;}
+.dept-req .dr-task{flex:1;font-size:12px;color:var(--ink-soft);}
+.dept-req .dr-time{font-family:var(--mono);font-size:11.5px;color:var(--muted);flex-shrink:0;}
+.coord-arrow{text-align:center;color:var(--faint);font-size:11px;padding:2px 0;}
+.coord-result{background:var(--blue-bg);border:1px solid #B9D2E8;border-radius:6px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+
+/* weight bars */
+.weight-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.weight-label{width:120px;font-size:11.5px;color:var(--ink-soft);flex-shrink:0;}
+.weight-track{flex:1;height:6px;background:var(--border-soft);border-radius:3px;overflow:hidden;}
+.weight-fill{height:100%;background:var(--navy-600);border-radius:3px;}
+.weight-val{width:32px;text-align:right;font-family:var(--mono);font-size:11px;color:var(--muted);flex-shrink:0;}
+
+/* ---------- Modal / Drawer ---------- */
+.overlay{position:fixed;inset:0;background:rgba(10,20,32,.42);z-index:100;display:none;align-items:stretch;justify-content:flex-end;}
+.overlay.open{display:flex;}
+.drawer{width:440px;max-width:92vw;background:#fff;height:100%;overflow-y:auto;box-shadow:-8px 0 24px rgba(0,0,0,.12);animation:slideIn .2s ease;}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.drawer-head{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;}
+.drawer-head h2{font-size:16px;margin:0 0 4px;font-family:var(--mono);}
+.drawer-head .dh-sub{font-size:12px;color:var(--muted);}
+.drawer-close{background:none;border:none;color:var(--muted);padding:4px;}
+.drawer-close svg{width:18px;height:18px;}
+.drawer-body{padding:18px 20px;}
+.dl-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border-soft);font-size:12.5px;}
+.dl-row .dl-k{color:var(--muted);}
+.dl-row .dl-v{font-weight:600;color:var(--ink);text-align:right;max-width:60%;}
+.reason-box{background:var(--paper);border-radius:6px;padding:12px 14px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;margin-top:12px;border-left:3px solid var(--navy-600);}
+.drawer-actions{display:flex;gap:8px;padding:16px 20px;border-top:1px solid var(--border);position:sticky;bottom:0;background:#fff;}
+.drawer-actions .btn{flex:1;justify-content:center;}
+.hitl-flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:14px;padding-top:14px;border-top:1px dashed var(--border);}
+.hitl-flow .hf-step{background:var(--paper);border:1px solid var(--border-soft);border-radius:20px;padding:4px 9px;}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy-900);color:#fff;padding:11px 16px;border-radius:6px;font-size:12.5px;box-shadow:var(--shadow-md);z-index:200;display:flex;align-items:center;gap:8px;opacity:0;transform:translateY(8px);transition:all .25s ease;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* ---------- misc ---------- */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;}
+.empty-state{padding:40px 20px;text-align:center;color:var(--muted);}
+.conflict-item{border:1px solid var(--border);border-radius:6px;padding:13px 15px;margin-bottom:10px;border-left-width:3px;}
+.conflict-item.sev-critical{border-left-color:var(--red);}
+.conflict-item.sev-high{border-left-color:var(--amber);}
+.conflict-item.sev-medium{border-left-color:var(--blue);}
+.conflict-item .ci-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px;}
+.conflict-item .ci-title{font-weight:700;font-size:13px;}
+.conflict-item .ci-desc{font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;}
+.conflict-item .ci-rec{font-size:12px;background:var(--paper);border-radius:5px;padding:8px 10px;color:var(--ink-soft);}
+.conflict-item .ci-rec b{color:var(--ink);}
+
+.data-src-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.data-src{border:1px solid var(--border);border-radius:6px;padding:12px 14px;}
+.data-src .ds-name{font-weight:700;font-size:12.5px;}
+.data-src .ds-full{font-size:11px;color:var(--muted);margin:2px 0 8px;}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto;}
+.tab-btn{padding:9px 14px;font-size:12.5px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;}
+.tab-btn.active{color:var(--navy-800);border-bottom-color:var(--navy-700);}
+
+.progress-bar-mini{height:6px;border-radius:3px;background:var(--border-soft);overflow:hidden;width:70px;display:inline-block;vertical-align:middle;}
+.progress-bar-mini > div{height:100%;background:var(--navy-600);}
+
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:140px;padding-top:10px;}
+.bar-chart .bc-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;}
+.bar-chart .bc-bar{width:100%;max-width:26px;border-radius:3px 3px 0 0;background:var(--navy-600);}
+.bar-chart .bc-label{font-size:9.5px;color:var(--muted);}
+.bar-chart .bc-val{font-size:10px;font-family:var(--mono);color:var(--ink-soft);}
+
+.line-chart-wrap{width:100%;}
+.line-chart-wrap svg{width:100%;height:150px;display:block;}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1024px){
+  .kpi-row{grid-template-columns:repeat(3,1fr);}
+  .grid-2, .grid-3, .two-col, .planner-form{grid-template-columns:1fr 1fr;}
+  .before-after{grid-template-columns:1fr;}
+  .data-src-grid{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:860px){
+  .sidebar{position:fixed;top:0;bottom:0;left:0;transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-backdrop.open{display:block;}
+  .hamburger{display:flex;}
+  .crumb .meta{display:none;}
+  .planner-form{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:640px){
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .grid-2,.grid-3,.two-col,.planner-form{grid-template-columns:1fr;}
+  .content{padding:14px 12px 32px;}
+  .page-head{flex-direction:column;}
+  .page-actions{width:100%;}
+  .page-actions .btn{flex:1;justify-content:center;}
+  table{display:none;}
+  .record-cards{display:block;}
+  .data-src-grid{grid-template-columns:1fr;}
+  .corridor-label{width:64px;font-size:10px;}
+  .drawer{width:100%;max-width:100%;}
+  .topbar{padding:0 10px;}
+  .sim-badge span.txt{display:none;}
+}
+@media (min-width:641px) and (max-width:860px){
+  .kpi-row{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">
+        <div class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M7 21l2-4M17 21l-2-4M3 12h18"/></svg></div>
+        <div>
+          <div class="name">RAILSYNC</div>
+          <div class="tag">AI Block Planning</div>
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-bottom">
+      <div class="nav-item" data-page="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
+      <div class="sidebar-user">
+        <div class="avatar">RS</div>
+        <div>
+          <div class="who">R. Sharma</div>
+          <div class="role">Section Engineer</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburgerBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
+        <div class="crumb">
+          <div class="div-name">Demo Railway Division</div>
+          <div class="meta">Week 35 · 2026 &nbsp;·&nbsp; Data: Simulation &nbsp;·&nbsp; Updated 2 min ago</div>
+        </div>
+        <div class="sim-badge"><span class="dot"></span><span class="txt">SIMULATION MODE</span></div>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="badge-dot"></span></button>
+        <button class="icon-btn" title="Help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></button>
+        <div class="topbar-profile"><div class="avatar">RS</div></div>
+      </div>
+    </header>
+    <main class="content" id="content"><div class="content-inner" id="contentInner"></div></main>
+  </div>
+</div>
+
+<div class="overlay" id="drawerOverlay">
+  <div class="drawer" id="drawerPanel"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   RAILSYNC PROTOTYPE — ALL DATA IS SYNTHETIC / FOR DEMO ONLY
+   ========================================================= */
+
+/* ---------- seeded RNG for consistent dummy data ---------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rnd = mulberry32(42);
+function pick(arr){return arr[Math.floor(rnd()*arr.length)];}
+function randInt(min,max){return Math.floor(rnd()*(max-min+1))+min;}
+function pad(n){return n<10?'0'+n:''+n;}
+
+const SECTIONS = ['A12','B07','C18','D22','E05'];
+const SECTION_NAMES = {A12:'Section A — Central Corridor',B07:'Section B — North Loop',C18:'Section C — Yard Approach',D22:'Section D — Coastal Line',E05:'Section E — Freight Spur'};
+const DEPARTMENTS = ['Engineering','Traction','S&T'];
+const DEPT_FULL = {Engineering:'Engineering (Track & Civil)',Traction:'Traction Distribution (OHE/Power)','S&T':'Signal & Telecommunication'};
+const ASSET_TYPES = {Engineering:['Track Segment','Rail Joint','Ballast Bed','Bridge Girder','Level Crossing'],Traction:['OHE Section','Traction Substation','Feeder Cable','Isolator Panel'],'S&T':['Signal','Point Machine','Track Circuit','Interlocking Panel','Telecom Repeater']};
+const CRITICALITY = ['Critical','High','Medium','Low'];
+const CRIT_COLOR = {Critical:'red',High:'amber',Medium:'blue',Low:'grey'};
+const STATUS_LIST = ['Pending','Scheduled','Completed','Postponed'];
+const TRAIN_TYPES = ['Passenger','Express','Freight'];
+const ROUTES = ['Central–Northline','Coastal–Junction','Yard–Terminal','Metro–Express Corridor','Freight Loop 2','Central–Hillview'];
+
+/* ---------- Generate Maintenance Tasks (120) ---------- */
+const TASKS = [];
+const deptCode = {Engineering:'ENG',Traction:'TRD','S&T':'SNT'};
+for(let i=0;i<120;i++){
+  const dept = pick(DEPARTMENTS);
+  const section = pick(SECTIONS);
+  const asset = pick(ASSET_TYPES[dept]) + ' ' + section;
+  const crit = pick(CRITICALITY);
+  const urgency = pick(['High','Medium','Low']);
+  const duration = pick([45,60,75,90,120,150,180]);
+  const day = randInt(24,36);
+  const dueDate = 'Sep ' + (day>30? day-30 : day) ;
+  const dueLabel = (day<=31?'Aug '+day:'Sep '+(day-31));
+  const status = pick(STATUS_LIST.concat(['Pending','Pending'])); // weight pending
+  TASKS.push({
+    id: deptCode[dept]+'-'+(1000+i),
+    dept, asset, section, criticality:crit, urgency, duration,
+    dueDate: dueLabel, status,
+    blockId: (status==='Scheduled'||status==='Completed') ? 'B-'+(200+randInt(0,34)) : null,
+    dependencies: rnd()>0.7 ? ['Corridor block confirmation'] : [],
+  });
+}
+
+/* ---------- Generate Trains (110) ---------- */
+const TRAINS = [];
+for(let i=0;i<110;i++){
+  const type = pick(TRAIN_TYPES.concat(['Passenger','Express']));
+  const section = pick(SECTIONS);
+  const hh = randInt(0,23), mm = pick([0,15,30,45]);
+  const delay = rnd()>0.72 ? randInt(5,40) : 0;
+  const expHH = Math.floor((hh*60+mm+delay)/60)%24, expMM=(hh*60+mm+delay)%60;
+  TRAINS.push({
+    no: (type==='Freight'?'6':type==='Express'?'2':'1')+String(randInt(1000,9999)),
+    type, route: pick(ROUTES), section,
+    scheduled: pad(hh)+':'+pad(mm),
+    expected: pad(expHH)+':'+pad(expMM),
+    priority: type==='Express'?'High':type==='Passenger'?'Medium':'Low',
+    status: delay===0?'On Time':(delay>25?'Delayed':'Minor Delay'),
+    delay,
+  });
+}
+TRAINS.sort((a,b)=>a.scheduled.localeCompare(b.scheduled));
+
+/* ---------- Generate Blocks (35) ---------- */
+const BLOCKS = [];
+for(let i=0;i<35;i++){
+  const section = pick(SECTIONS);
+  const startH = pick([0,1,2,3,22,23]);
+  const duration = pick([90,120,150,180,210]);
+  const endMin = startH*60+duration;
+  const endH = Math.floor(endMin/60)%24, endM = endMin%60;
+  const depts = [];
+  const nDepts = randInt(1,3);
+  const shuffled = [...DEPARTMENTS].sort(()=>rnd()-0.5);
+  for(let d=0;d<nDepts;d++) depts.push(shuffled[d]);
+  const util = randInt(68,97);
+  const impact = util>90?'Low':util>80?'Medium':'High';
+  BLOCKS.push({
+    id:'B-'+(200+i), section, start:pad(startH)+':00', end:pad(endH)+':'+pad(endM),
+    duration, departments:depts, taskCount: randInt(2,6),
+    trainImpact: impact, utilization: util,
+    priority: pick(CRITICALITY),
+    status: pick(['Proposed','Approved','Approved','Modified']),
+    reason: 'Selected because it provides sufficient maintenance duration, avoids scheduled high-priority train movements, and combines '+depts.length+' compatible departmental task'+(depts.length>1?'s':'')+' within Section '+section+'.',
+  });
+}
+
+/* attach some tasks to blocks for consistency */
+TASKS.filter(t=>t.blockId).forEach(t=>{ /* left as-is, illustrative link */ });
+
+/* ---------- Conflicts ---------- */
+const CONFLICTS = [
+  {id:'CF-101',type:'Train Conflict',section:'B07',severity:'Critical',title:'Maintenance overlaps scheduled freight movement',desc:'Proposed OHE maintenance window (02:00–04:00) overlaps a scheduled freight service currently listed as On Time through Section B07.',rec:'Shift maintenance start to 02:30 or reassign freight path via Loop 2.'},
+  {id:'CF-102',type:'Resource Conflict',section:'A12',severity:'High',title:'Engineering Crew 04 assigned to two tasks',desc:'Crew 04 is double-booked between ENG-1042 (Track Segment A12) and ENG-1067 (Bridge Girder A12) in an overlapping window.',rec:'Reassign ENG-1067 to Crew 07, which has open capacity in the same window.'},
+  {id:'CF-103',type:'Block Conflict',section:'C18',severity:'High',title:'Two departments requesting same corridor window',desc:'Traction and S&T have both requested the 02:15–03:30 window on Section C18 for non-integrated work.',rec:'Merge into a single coordinated block; both tasks are compatible for joint execution.'},
+  {id:'CF-104',type:'Train Conflict',section:'D22',severity:'Medium',title:'Passenger service within buffer window',desc:'A passenger service is scheduled 12 minutes after the proposed block end on Section D22, inside the recommended safety buffer.',rec:'Extend buffer by trimming block duration by 15 minutes or delaying block start.'},
+  {id:'CF-105',type:'Resource Conflict',section:'E05',severity:'Medium',title:'Signal maintenance van unavailable',desc:'S&T maintenance van 3 is already allocated to Section A12 during the same window requested for Section E05.',rec:'Use standby van 5 or reschedule Section E05 task to the following window.'},
+  {id:'CF-106',type:'Block Conflict',section:'A12',severity:'Low',title:'Minor overlap in buffer time only',desc:'Two proposed blocks share a 5-minute buffer overlap with no operational impact expected.',rec:'No action required; monitor at execution time.'},
+];
+
+/* ---------- Departments summary ---------- */
+function deptSummary(dept){
+  const t = TASKS.filter(x=>x.dept===dept);
+  return {
+    pending: t.filter(x=>x.status==='Pending').length,
+    critical: t.filter(x=>x.criticality==='Critical').length,
+    overdue: t.filter(x=>x.status==='Pending' && rnd()>0.6).length,
+    scheduled: t.filter(x=>x.status==='Scheduled').length,
+    utilization: randInt(75,95),
+    total: t.length,
+  };
+}
+
+/* ---------- Icons ---------- */
+const ICONS = {
+  dashboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>',
+  planner:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="3"/></svg>',
+  maintenance:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 1 0-5.4 5.4L2 19l3 3 7.3-7.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2-2z"/></svg>',
+  trains:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="13" rx="4"/><path d="M4 11h16M8 19l-2 3M16 19l2 3"/><circle cx="8.5" cy="16" r="0"/></svg>',
+  corridor:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/><circle cx="7" cy="6" r="1.2" fill="currentColor"/><circle cx="15" cy="12" r="1.2" fill="currentColor"/><circle cx="10" cy="18" r="1.2" fill="currentColor"/></svg>',
+  departments:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  weekly:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  monthly:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>',
+  conflicts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  analytics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-8"/></svg>',
+  reports:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6M9 9h1"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>',
+  download:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+};
+
+const NAV_ITEMS = [
+  {id:'dashboard',label:'Dashboard'},
+  {id:'planner',label:'Block Planner'},
+  {id:'maintenance',label:'Maintenance'},
+  {id:'trains',label:'Train Operations'},
+  {id:'corridor',label:'Corridor Availability'},
+  {id:'departments',label:'Departments'},
+  {id:'weekly',label:'Weekly Plan'},
+  {id:'monthly',label:'Monthly Plan'},
+  {id:'conflicts',label:'Conflicts'},
+  {id:'analytics',label:'Analytics'},
+  {id:'reports',label:'Reports'},
+];
+
+let STATE = { page:'dashboard', filters:{}, sort:{}, planGenerated:false, generatedBlocks:[] };
+
+/* ---------- Sidebar render ---------- */
+function renderSidebarNav(){
+  const el = document.getElementById('sidebarNav');
+  el.innerHTML = NAV_ITEMS.map(n=>`
+    <div class="nav-item ${STATE.page===n.id?'active':''}" data-page="${n.id}">${ICONS[n.id]||''}<span>${n.label}</span></div>
+  `).join('');
+}
+
+document.getElementById('sidebar').addEventListener('click',(e)=>{
+  const item = e.target.closest('.nav-item');
+  if(!item) return;
+  const page = item.getAttribute('data-page');
+  if(page==='settings'){ showToast('Settings — not part of this prototype scope.'); return; }
+  STATE.page = page;
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('open');
+  renderSidebarNav();
+  renderPage();
+  document.getElementById('content').scrollTop = 0;
+});
+document.getElementById('hamburgerBtn').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('open');
+});
+document.getElementById('sidebarBackdrop').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('open');
+});
+
+/* ---------- Toast ---------- */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastT);
+  window._toastT = setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ---------- Drawer ---------- */
+function openDrawer(html){
+  document.getElementById('drawerPanel').innerHTML = html;
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+function closeDrawer(){ document.getElementById('drawerOverlay').classList.remove('open'); }
+document.getElementById('drawerOverlay').addEventListener('click',(e)=>{ if(e.target.id==='drawerOverlay') closeDrawer(); });
+
+/* ---------- Chip helper ---------- */
+function chip(text, color){ return `<span class="chip chip-${color}">${text}</span>`; }
+function critChip(c){ return chip(c, CRIT_COLOR[c]||'grey'); }
+function statusChip(s){
+  const map = {Pending:'amber',Scheduled:'blue',Completed:'green',Postponed:'grey','On Time':'green','Delayed':'red','Minor Delay':'amber',Proposed:'grey',Approved:'green',Modified:'amber',Rejected:'red'};
+  return chip(s, map[s]||'grey');
+}
+
+/* ====================== PAGE: DASHBOARD ====================== */
+function pageDashboard(){
+  const critical = TASKS.filter(t=>t.criticality==='Critical').length;
+  const overdue = TASKS.filter(t=>t.status==='Pending' && (t.dueDate.includes('Aug 2')||t.dueDate.includes('Aug 3'))).length;
+  const available = BLOCKS.filter(b=>b.utilization<85).length + 18;
+  const activeConflicts = CONFLICTS.length;
+
+  return `
+  <div class="page-head">
+    <div>
+      <h1>Railway Maintenance Operations</h1>
+      <p>AI-assisted planning and optimization of maintenance blocks.</p>
+    </div>
+    <div class="page-actions">
+      <button class="btn" data-nav="reports">${ICONS.reports}Reports</button>
+      <button class="btn btn-primary" data-nav="planner">${ICONS.planner}Generate Plan</button>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card crit"><div class="label">Critical Maintenance</div><div class="value">18</div><div class="sub">across 5 sections</div></div>
+    <div class="kpi-card warn"><div class="label">Overdue Tasks</div><div class="value">27</div><div class="sub down">▲ 4 vs last week</div></div>
+    <div class="kpi-card good"><div class="label">Available Blocks</div><div class="value">42</div><div class="sub">this planning horizon</div></div>
+    <div class="kpi-card crit"><div class="label">Active Conflicts</div><div class="value">${activeConflicts}</div><div class="sub">2 critical</div></div>
+    <div class="kpi-card"><div class="label">Asset Availability</div><div class="value">94.2%</div><div class="sub up">▲ 0.6%</div></div>
+    <div class="kpi-card"><div class="label">Block Utilization</div><div class="value">87%</div><div class="sub">target 85%</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-head"><div><h3>Corridor Network Overview</h3><div class="desc">Live section status — simulation data</div></div><span class="chip chip-grey">Simulation Data</span></div>
+      <div class="panel-body">
+        <div class="network-wrap">
+          ${SECTIONS.map(s=>renderNetworkRow(s)).join('')}
+        </div>
+        <div class="corridor-legend" style="padding-left:0;margin-top:14px;">
+          <div class="lg-item"><span class="sw" style="background:#CFE6D9;"></span>Available</div>
+          <div class="lg-item"><span class="sw" style="background:#D79A55;"></span>Maintenance planned</div>
+          <div class="lg-item"><span class="sw" style="background:#C0645D;"></span>Critical / blocked</div>
+          <div class="lg-item"><span class="sw" style="background:#4F8FC4;"></span>Train movement</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Multi-Department Coordination</h3></div>
+      <div class="panel-body">
+        <div class="dept-coord">
+          <div class="dept-req"><div class="dr-dept">Engineering</div><div class="dr-task">Track repair, Section A12</div><div class="dr-time">02:00–04:00</div></div>
+          <div class="dept-req"><div class="dr-dept">Traction</div><div class="dr-task">OHE maintenance, Section A12</div><div class="dr-time">02:30–04:30</div></div>
+          <div class="dept-req"><div class="dr-dept">S&T</div><div class="dr-task">Signal maintenance, Section A12</div><div class="dr-time">02:15–03:15</div></div>
+          <div class="coord-arrow">↓ Compatible work detected ↓</div>
+          <div class="coord-result">
+            <div><b>Recommended Integrated Block</b><div style="font-size:12px;color:var(--muted);margin-top:2px;">02:30–04:30 · Engineering + Traction + S&T</div></div>
+            <button class="btn btn-sm btn-primary" data-nav="planner">View in Planner</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div><h3>Maintenance Work Queue — Priority View</h3><div class="desc">Top items requiring attention</div></div>
+      <button class="btn btn-sm" data-nav="maintenance">View all ${TASKS.length} tasks</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Task ID</th><th>Department</th><th>Asset</th><th>Section</th><th>Criticality</th><th>Due</th><th>Status</th></tr></thead>
+        <tbody>
+          ${TASKS.filter(t=>t.criticality==='Critical').slice(0,7).map(t=>`
+            <tr data-task="${t.id}">
+              <td class="id-cell">${t.id}</td><td>${t.dept}</td><td>${t.asset}</td><td>${t.section}</td>
+              <td>${critChip(t.criticality)}</td><td class="mono">${t.dueDate}</td><td>${statusChip(t.status)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  `;
+}
+
+function renderNetworkRow(section){
+  const segs = [];
+  let cursor = 0;
+  const total = 24;
+  const nSegs = randIntSeeded(section,2,4);
+  let localSeed = section.charCodeAt(0)+section.charCodeAt(2);
+  const lr = mulberry32(localSeed*7+3);
+  for(let i=0;i<nSegs && cursor<total;i++){
+    const w = Math.min(total-cursor, 2+Math.floor(lr()*5));
+    const type = pick3(lr, ['available','maintenance','train','available']);
+    segs.push({start:cursor,width:w,type});
+    cursor+=w;
+  }
+  if(cursor<total) segs.push({start:cursor,width:total-cursor,type:'available'});
+  const colorMap = {available:'#CFE6D9',maintenance:'#D79A55',train:'#4F8FC4',critical:'#C0645D'};
+  const hasCritical = lr()>0.8;
+  if(hasCritical && segs.length){ segs[0].type='critical'; }
+  const statusLabel = hasCritical?statusChip('Delayed').replace('Delayed','Critical'):(segs.some(s=>s.type==='maintenance')?chip('Maintenance','amber'):chip('Available','green'));
+  return `<div class="network-section">
+    <div class="ns-name">${section}</div>
+    <div class="ns-bar">${segs.map(s=>`<div class="ns-seg" style="width:${(s.width/total*100)}%;background:${colorMap[s.type]||'#CFE6D9'};"></div>`).join('')}</div>
+    <div class="ns-status">${statusLabel}</div>
+  </div>`;
+}
+function pick3(lr,arr){return arr[Math.floor(lr()*arr.length)];}
+function randIntSeeded(seedStr,min,max){const s=[...seedStr].reduce((a,c)=>a+c.charCodeAt(0),0);const r=mulberry32(s);return Math.floor(r()*(max-min+1))+min;}
+
+/* ====================== PAGE ROUTER (loads in stages) ====================== */
+function renderPage(){
+  const map = { dashboard: pageDashboard };
+  const fn = map[STATE.page] || window['page_'+STATE.page];
+  const html = (typeof fn === 'function') ? fn() : `<div class="empty-state">Page "${STATE.page}" is being finalized in this build.</div>`;
+  document.getElementById('contentInner').innerHTML = html;
+  attachContentHandlers();
+}
+
+function attachContentHandlers(){
+  document.querySelectorAll('[data-nav]').forEach(el=>{
+    el.addEventListener('click',()=>{ STATE.page = el.getAttribute('data-nav'); renderSidebarNav(); renderPage(); document.getElementById('content').scrollTop=0; });
+  });
+  if(typeof attachPageHandlers === 'function') attachPageHandlers();
+}
+
+/* ====================== PAGE: MAINTENANCE ====================== */
+function page_maintenance(){
+  STATE.filters.maint = STATE.filters.maint || {q:'',dept:'',crit:'',status:''};
+  STATE.sort.maint = STATE.sort.maint || {key:'id',dir:1};
+  const f = STATE.filters.maint;
+  let rows = TASKS.filter(t=>
+    (!f.q || (t.id+t.asset+t.section).toLowerCase().includes(f.q.toLowerCase())) &&
+    (!f.dept || t.dept===f.dept) && (!f.crit || t.criticality===f.crit) && (!f.status || t.status===f.status)
+  );
+  const s = STATE.sort.maint;
+  rows.sort((a,b)=> (a[s.key]>b[s.key]?1:-1)*s.dir );
+
+  return `
+  <div class="page-head">
+    <div><h1>Maintenance Work Queue</h1><p>${TASKS.length} synthetic maintenance records across all departments.</p></div>
+    <div class="page-actions"><button class="btn btn-primary" data-nav="planner">${ICONS.planner}Send to Planner</button></div>
+  </div>
+  <div class="panel">
+    <div class="table-toolbar">
+      <div class="search-box">${ICONS.search}<input id="maintSearch" placeholder="Search task, asset, section..." value="${f.q}"/></div>
+      <select class="filter-select" id="maintDept"><option value="">All Departments</option>${DEPARTMENTS.map(d=>`<option ${f.dept===d?'selected':''}>${d}</option>`).join('')}</select>
+      <select class="filter-select" id="maintCrit"><option value="">All Criticality</option>${CRITICALITY.map(c=>`<option ${f.crit===c?'selected':''}>${c}</option>`).join('')}</select>
+      <select class="filter-select" id="maintStatus"><option value="">All Status</option>${STATUS_LIST.map(c=>`<option ${f.status===c?'selected':''}>${c}</option>`).join('')}</select>
+      <div class="result-count">${rows.length} of ${TASKS.length} records</div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th data-sk="id">Task ID</th><th data-sk="dept">Department</th><th data-sk="asset">Asset</th><th data-sk="section">Section</th>
+          <th data-sk="criticality">Criticality</th><th data-sk="urgency">Urgency</th><th data-sk="duration">Duration</th><th data-sk="dueDate">Due Date</th><th data-sk="status">Status</th>
+        </tr></thead>
+        <tbody>
+          ${rows.slice(0,80).map(t=>`<tr data-task="${t.id}">
+            <td class="id-cell">${t.id}</td><td>${t.dept}</td><td>${t.asset}</td><td>${t.section}</td>
+            <td>${critChip(t.criticality)}</td><td>${t.urgency}</td><td class="mono">${t.duration} min</td><td class="mono">${t.dueDate}</td><td>${statusChip(t.status)}</td>
+          </tr>`).join('') || ''}
+        </tbody>
+      </table>
+      ${rows.length===0?'<div class="no-results">No tasks match the current filters.</div>':''}
+    </div>
+    <div class="record-cards">
+      ${rows.slice(0,80).map(t=>`<div class="record-card" data-task="${t.id}">
+        <div class="rc-top"><span class="rc-id">${t.id}</span>${statusChip(t.status)}</div>
+        <div class="rc-grid">
+          <div><span>Dept</span> ${t.dept}</div><div><span>Section</span> ${t.section}</div>
+          <div><span>Crit.</span> ${critChip(t.criticality)}</div><div><span>Due</span> ${t.dueDate}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ====================== PAGE: TRAIN OPERATIONS ====================== */
+function page_trains(){
+  STATE.filters.trains = STATE.filters.trains || {q:'',type:'',section:''};
+  const f = STATE.filters.trains;
+  let rows = TRAINS.filter(t=>
+    (!f.q || (t.no+t.route).toLowerCase().includes(f.q.toLowerCase())) &&
+    (!f.type || t.type===f.type) && (!f.section || t.section===f.section));
+  const selSection = f.section || 'A12';
+
+  return `
+  <div class="page-head"><div><h1>Train Operations</h1><p>${TRAINS.length} synthetic train movements for the current planning day.</p></div></div>
+
+  <div class="panel">
+    <div class="panel-head"><div><h3>Movement Timeline — Section ${selSection}</h3><div class="desc">Illustrative movement window, simulation data</div></div></div>
+    <div class="panel-body">
+      ${corridorTimeline(selSection)}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="table-toolbar">
+      <div class="search-box">${ICONS.search}<input id="trainSearch" placeholder="Search train no. or route..." value="${f.q}"/></div>
+      <select class="filter-select" id="trainType"><option value="">All Types</option>${TRAIN_TYPES.map(d=>`<option ${f.type===d?'selected':''}>${d}</option>`).join('')}</select>
+      <select class="filter-select" id="trainSection"><option value="">All Sections</option>${SECTIONS.map(d=>`<option ${f.section===d?'selected':''}>${d}</option>`).join('')}</select>
+      <div class="result-count">${rows.length} of ${TRAINS.length} records</div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Train No.</th><th>Type</th><th>Route</th><th>Section</th><th>Scheduled</th><th>Expected</th><th>Priority</th><th>Status</th></tr></thead>
+        <tbody>
+          ${rows.slice(0,80).map(t=>`<tr>
+            <td class="id-cell">${t.no}</td><td>${t.type}</td><td>${t.route}</td><td>${t.section}</td>
+            <td class="mono">${t.scheduled}</td><td class="mono">${t.expected}</td><td>${t.priority}</td><td>${statusChip(t.status)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      ${rows.length===0?'<div class="no-results">No trains match the current filters.</div>':''}
+    </div>
+    <div class="record-cards">
+      ${rows.slice(0,80).map(t=>`<div class="record-card">
+        <div class="rc-top"><span class="rc-id">${t.no}</span>${statusChip(t.status)}</div>
+        <div class="rc-grid"><div><span>Type</span> ${t.type}</div><div><span>Section</span> ${t.section}</div>
+        <div><span>Sched.</span> ${t.scheduled}</div><div><span>Exp.</span> ${t.expected}</div></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ====================== Corridor Gantt component (signature element) ====================== */
+function corridorTimeline(section){
+  const lr = mulberry32(section.charCodeAt(0)*13+section.charCodeAt(2)*7);
+  const hours = Array.from({length:24},(_,i)=>i);
+  let segs = []; let cursor=0;
+  while(cursor<24){
+    const w = Math.min(24-cursor, 1+Math.floor(lr()*4));
+    const type = pick3(lr,['available','available','train','maintenance']);
+    segs.push({start:cursor,width:w,type});
+    cursor+=w;
+  }
+  const label = {available:'Available',train:'Train movement',maintenance:'Maintenance'};
+  return `
+    <div class="corridor-row">
+      <div class="corridor-label">${section}</div>
+      <div class="corridor-lane">
+        ${segs.map(s=>`<div class="corridor-seg seg-${s.type}" style="left:${s.start/24*100}%;width:${s.width/24*100}%;" title="${label[s.type]} ${pad(s.start)}:00–${pad(Math.min(24,s.start+s.width))}:00">${s.width>=2?label[s.type]:''}</div>`).join('')}
+      </div>
+    </div>
+    <div class="corridor-axis">${[0,6,12,18,24].map(h=>`<span>${pad(h)}:00</span>`).join('')}</div>
+    <div class="corridor-legend">
+      <div class="lg-item"><span class="sw" style="background:#4F8FC4;"></span>Train movement</div>
+      <div class="lg-item"><span class="sw" style="background:#D79A55;"></span>Maintenance</div>
+      <div class="lg-item"><span class="sw" style="background:#CFE6D9;"></span>Available block</div>
+    </div>`;
+}
+
+/* ====================== PAGE: CORRIDOR AVAILABILITY ====================== */
+function page_corridor(){
+  return `
+  <div class="page-head"><div><h1>Corridor Availability</h1><p>24-hour occupancy view per railway section — simulation data.</p></div></div>
+  <div class="panel">
+    <div class="panel-body">
+      ${SECTIONS.map(s=>`<div style="margin-bottom:22px;"><div style="font-weight:700;font-size:12.5px;margin-bottom:6px;">${SECTION_NAMES[s]}</div>${corridorTimeline(s)}</div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ====================== PAGE: DEPARTMENTS ====================== */
+function page_departments(){
+  return `
+  <div class="page-head"><div><h1>Departments</h1><p>Workload and coordination summary by department.</p></div></div>
+  <div class="grid-3">
+    ${DEPARTMENTS.map(d=>{
+      const s = deptSummary(d);
+      return `<div class="panel">
+        <div class="panel-head"><h3>${DEPT_FULL[d]}</h3></div>
+        <div class="panel-body">
+          <div class="dl-row"><span class="dl-k">Pending Tasks</span><span class="dl-v">${s.pending}</span></div>
+          <div class="dl-row"><span class="dl-k">Critical Tasks</span><span class="dl-v">${s.critical}</span></div>
+          <div class="dl-row"><span class="dl-k">Overdue Tasks</span><span class="dl-v">${s.overdue}</span></div>
+          <div class="dl-row"><span class="dl-k">Scheduled Blocks</span><span class="dl-v">${s.scheduled}</span></div>
+          <div class="dl-row" style="border-bottom:none;"><span class="dl-k">Utilization</span><span class="dl-v">${s.utilization}%</span></div>
+          <button class="btn btn-sm" style="width:100%;justify-content:center;margin-top:10px;" data-nav="maintenance">View ${d} tasks</button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+/* ====================== PAGE: WEEKLY PLAN ====================== */
+const WEEK_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+function page_weekly(){
+  STATE.filters.weekly = STATE.filters.weekly || {dept:'',section:'',priority:''};
+  const f = STATE.filters.weekly;
+  const lr = mulberry32(99);
+  const weekBlocks = WEEK_DAYS.map((d,i)=>{
+    const n = 2+Math.floor(lr()*3);
+    return Array.from({length:n},(_,j)=>{
+      const dept = pick3(lr,DEPARTMENTS); const sec = pick3(lr,SECTIONS);
+      const st = pick3(lr,['Planned','Planned','Completed','Postponed','Critical']);
+      if((f.dept && dept!==f.dept) || (f.section && sec!==f.section)) return null;
+      return {id:'WB-'+i+j,dept,sec,st,time:pad(1+Math.floor(lr()*4))+':00–0'+(3+Math.floor(lr()*3))+':00'};
+    }).filter(Boolean);
+  });
+  const stMap = {Planned:'blue',Completed:'green',Postponed:'grey',Critical:'red'};
+  return `
+  <div class="page-head"><div><h1>Weekly Plan</h1><p>Maintenance blocks for Week 35, 2026.</p></div>
+    <div class="page-actions"><button class="btn" data-nav="monthly">View Monthly</button></div>
+  </div>
+  <div class="panel">
+    <div class="table-toolbar">
+      <select class="filter-select" id="weeklyDept"><option value="">All Departments</option>${DEPARTMENTS.map(d=>`<option ${f.dept===d?'selected':''}>${d}</option>`).join('')}</select>
+      <select class="filter-select" id="weeklySection"><option value="">All Sections</option>${SECTIONS.map(d=>`<option ${f.section===d?'selected':''}>${d}</option>`).join('')}</select>
+    </div>
+    <div class="panel-body" style="overflow-x:auto;">
+      <div style="display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));gap:10px;min-width:900px;">
+        ${WEEK_DAYS.map((d,i)=>`
+          <div>
+            <div style="font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);">${d}</div>
+            ${weekBlocks[i].map(b=>`<div style="border:1px solid var(--border);border-left:3px solid var(--navy-600);border-radius:5px;padding:8px 9px;margin-bottom:7px;font-size:11.5px;">
+              <div style="font-weight:700;margin-bottom:3px;">${b.dept}</div>
+              <div class="mono" style="color:var(--muted);margin-bottom:5px;">Sec ${b.sec} · ${b.time}</div>
+              ${chip(b.st, stMap[b.st])}
+            </div>`).join('') || '<div style="font-size:11px;color:var(--faint);padding:8px 0;">No blocks</div>'}
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ====================== PAGE: MONTHLY PLAN ====================== */
+function page_monthly(){
+  const lr = mulberry32(77);
+  const days = Array.from({length:30},(_,i)=>i+1);
+  return `
+  <div class="page-head"><div><h1>Monthly Plan</h1><p>September 2026 — division-wide overview.</p></div></div>
+  <div class="kpi-row" style="grid-template-columns:repeat(5,1fr);">
+    <div class="kpi-card"><div class="label">Total Tasks</div><div class="value">${TASKS.length}</div></div>
+    <div class="kpi-card"><div class="label">Planned Blocks</div><div class="value">${BLOCKS.length}</div></div>
+    <div class="kpi-card crit"><div class="label">Critical Tasks</div><div class="value">${TASKS.filter(t=>t.criticality==='Critical').length}</div></div>
+    <div class="kpi-card good"><div class="label">Expected Availability</div><div class="value">93.8%</div></div>
+    <div class="kpi-card"><div class="label">Dept. Workload</div><div class="value">Balanced</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>September 2026</h3></div>
+    <div class="panel-body">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;">
+        ${days.map(d=>{
+          const n = Math.floor(lr()*4);
+          const hasCrit = lr()>0.85;
+          return `<div style="border:1px solid var(--border-soft);border-radius:5px;padding:7px;min-height:64px;">
+            <div class="mono" style="font-size:11px;color:var(--muted);">${d}</div>
+            ${n>0?`<div style="font-size:10px;margin-top:4px;">${chip(n+' blocks', hasCrit?'red':'blue')}</div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ====================== PAGE: CONFLICTS ====================== */
+function page_conflicts(){
+  STATE.filters.conflicts = STATE.filters.conflicts || {sev:'',type:''};
+  const f = STATE.filters.conflicts;
+  const rows = CONFLICTS.filter(c=>(!f.sev||c.severity===f.sev)&&(!f.type||c.type===f.type));
+  const sevClass = {Critical:'sev-critical',High:'sev-high',Medium:'sev-medium',Low:'sev-medium'};
+  const sevChip = {Critical:'red',High:'amber',Medium:'blue',Low:'grey'};
+  return `
+  <div class="page-head"><div><h1>Conflict Detection</h1><p>${CONFLICTS.length} conflicts identified across current planning horizon.</p></div></div>
+  <div class="panel">
+    <div class="table-toolbar">
+      <select class="filter-select" id="confSev"><option value="">All Severity</option>${['Critical','High','Medium','Low'].map(s=>`<option ${f.sev===s?'selected':''}>${s}</option>`).join('')}</select>
+      <select class="filter-select" id="confType"><option value="">All Types</option>${['Train Conflict','Resource Conflict','Block Conflict'].map(s=>`<option ${f.type===s?'selected':''}>${s}</option>`).join('')}</select>
+      <div class="result-count">${rows.length} of ${CONFLICTS.length}</div>
+    </div>
+    <div class="panel-body">
+      ${rows.map(c=>`<div class="conflict-item ${sevClass[c.severity]}">
+        <div class="ci-top"><div class="ci-title">⚠ ${c.title}</div>${chip(c.severity, sevChip[c.severity])}</div>
+        <div class="ci-desc"><span class="chip chip-grey" style="margin-right:6px;">${c.type}</span>Section ${c.section} — ${c.desc}</div>
+        <div class="ci-rec"><b>Recommended resolution:</b> ${c.rec}</div>
+      </div>`).join('') || '<div class="no-results">No conflicts match the current filters.</div>'}
+    </div>
+  </div>`;
+}
+
+/* ====================== PAGE: ANALYTICS ====================== */
+function page_analytics(){
+  const availTrend = [91,92,90,93,94,93,94.2];
+  const util = [78,82,80,85,87,84,87];
+  const dept = DEPARTMENTS.map(d=>({d,v:deptSummary(d).total}));
+  return `
+  <div class="page-head"><div><h1>Analytics</h1><p>Trends across maintenance operations. <span class="chip chip-grey" style="margin-left:4px;">Simulation Data</span></p></div></div>
+  <div class="grid-2">
+    <div class="panel"><div class="panel-head"><h3>Asset Availability Trend (%)</h3></div><div class="panel-body">${lineChart(availTrend,['M','T','W','T','F','S','S'])}</div></div>
+    <div class="panel"><div class="panel-head"><h3>Block Utilization (%)</h3></div><div class="panel-body">${lineChart(util,['M','T','W','T','F','S','S'])}</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="panel"><div class="panel-head"><h3>Department Workload</h3></div><div class="panel-body">${barChart(dept.map(x=>x.v),dept.map(x=>x.d))}</div></div>
+    <div class="panel"><div class="panel-head"><h3>Conflict Trend (per week)</h3></div><div class="panel-body">${barChart([9,7,8,6,5,CONFLICTS.length],['W1','W2','W3','W4','W5','Now'])}</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="panel"><div class="panel-head"><h3>Maintenance Completion</h3></div><div class="panel-body">
+      <div class="dl-row"><span class="dl-k">Completed this week</span><span class="dl-v">${TASKS.filter(t=>t.status==='Completed').length}</span></div>
+      <div class="dl-row"><span class="dl-k">Scheduled</span><span class="dl-v">${TASKS.filter(t=>t.status==='Scheduled').length}</span></div>
+      <div class="dl-row" style="border-bottom:none;"><span class="dl-k">Pending</span><span class="dl-v">${TASKS.filter(t=>t.status==='Pending').length}</span></div>
+    </div></div>
+    <div class="panel"><div class="panel-head"><h3>Overdue Tasks by Department</h3></div><div class="panel-body">${barChart(DEPARTMENTS.map(d=>deptSummary(d).overdue),DEPARTMENTS)}</div></div>
+  </div>`;
+}
+function lineChart(vals,labels){
+  const w=560,h=140,pad=20; const max=Math.max(...vals)+2, min=Math.min(...vals)-2;
+  const pts = vals.map((v,i)=>[pad+i*((w-2*pad)/(vals.length-1)), h-pad-((v-min)/(max-min))*(h-2*pad)]);
+  const path = pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  return `<div class="line-chart-wrap"><svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <path d="${path}" fill="none" stroke="#173352" stroke-width="2"/>
+    ${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#173352"/>`).join('')}
+  </svg>
+  <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);padding:0 20px;">${labels.map(l=>`<span>${l}</span>`).join('')}</div></div>`;
+}
+function barChart(vals,labels){
+  const max=Math.max(...vals,1);
+  return `<div class="bar-chart">${vals.map((v,i)=>`<div class="bc-col"><div class="bc-val">${v}</div><div class="bc-bar" style="height:${(v/max*100)}%;"></div><div class="bc-label">${labels[i]}</div></div>`).join('')}</div>`;
+}
+
+/* ====================== PAGE: REPORTS ====================== */
+function page_reports(){
+  const reps = [
+    {name:'Weekly Block Plan',desc:'All approved and proposed blocks for the current week.'},
+    {name:'Monthly Block Plan',desc:'Division-wide monthly maintenance block summary.'},
+    {name:'Maintenance Summary',desc:'Status of all maintenance tasks by department and criticality.'},
+    {name:'Conflict Report',desc:'Detected conflicts, severity and recommended resolutions.'},
+    {name:'Asset Availability Report',desc:'Section-wise asset availability and utilization trend.'},
+  ];
+  return `
+  <div class="page-head"><div><h1>Reports</h1><p>Generate simulated reports from current planning data.</p></div></div>
+  <div class="grid-2">
+    ${reps.map(r=>`<div class="panel"><div class="panel-head"><div><h3>${r.name}</h3><div class="desc">${r.desc}</div></div></div>
+      <div class="panel-body" style="display:flex;gap:8px;">
+        <button class="btn btn-sm report-preview" data-name="${r.name}">Preview</button>
+        <button class="btn btn-sm report-export" data-name="${r.name}" data-fmt="PDF">${ICONS.download}Export PDF</button>
+        <button class="btn btn-sm report-export" data-name="${r.name}" data-fmt="CSV">${ICONS.download}Export CSV</button>
+      </div>
+    </div>`).join('')}
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>Connected Data Sources</h3><div class="desc">Placeholders for future system integration</div></div>
+    <div class="panel-body"><div class="data-src-grid">
+      ${['TMS','SMMS','TDMS','BDMS','COA','Train Timetable'].map(s=>`<div class="data-src"><div class="ds-name">${s}</div><div class="ds-full">${ {TMS:'Track Management System',SMMS:'Signal Maintenance Mgmt System',TDMS:'Traction Distribution Mgmt System',BDMS:'Block Demand Mgmt System',COA:'Corridor / Operations Authority',"Train Timetable":'Timetable & Scheduling Feed'}[s] }</div>${chip('Simulation / Mock Connector','grey')}</div>`).join('')}
+    </div></div>
+  </div>`;
+}
+
+/* ====================== PAGE: BLOCK PLANNER ====================== */
+function page_planner(){
+  return `
+  <div class="page-head"><div><h1>Automatic Block Planner</h1><p>AI-assisted generation of optimized, multi-department maintenance blocks.</p></div></div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Planning Parameters</h3></div>
+    <div class="panel-body">
+      <div class="planner-form">
+        <div class="field"><label>Planning Horizon</label><select><option>Next 7 days</option><option>Next 14 days</option><option>Next 30 days</option></select></div>
+        <div class="field"><label>Date Range</label><input type="text" value="01 Sep – 07 Sep 2026"/></div>
+        <div class="field"><label>Division</label><select><option>Demo Railway Division</option></select></div>
+        <div class="field"><label>Section</label><select><option>All Sections</option>${SECTIONS.map(s=>`<option>${s}</option>`).join('')}</select></div>
+        <div class="field"><label>Department</label><select><option>All Departments</option>${DEPARTMENTS.map(s=>`<option>${s}</option>`).join('')}</select></div>
+        <div class="field"><label>Priority</label><select><option>All Priorities</option>${CRITICALITY.map(s=>`<option>${s}</option>`).join('')}</select></div>
+        <div class="field"><label>Maximum Block Duration</label><select><option>120 min</option><option>150 min</option><option>180 min</option><option>210 min</option></select></div>
+        <div class="field" style="justify-content:flex-end;"><button class="btn btn-primary" id="genPlanBtn" style="width:100%;justify-content:center;">${ICONS.planner}Generate Optimized Plan</button></div>
+      </div>
+      <div class="gen-progress" id="genProgress">
+        ${['Analyzing maintenance tasks...','Checking corridor availability...','Checking train conflicts...','Coordinating departments...','Optimizing block windows...'].map((s,i)=>`
+          <div class="gen-step" id="genStep${i}"><div class="gs-icon"></div>${s}</div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div id="plannerResults">${STATE.planGenerated ? plannerResultsHTML() : ''}</div>
+  `;
+}
+
+function plannerResultsHTML(){
+  const blocks = STATE.generatedBlocks;
+  return `
+  <div class="panel" style="border-color:var(--green-line);">
+    <div class="panel-head"><div><h3>Optimized Plan Generated</h3><div class="desc">Illustrative simulation result — not real railway data</div></div>${chip('Generated','green')}</div>
+    <div class="panel-body">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Block ID</th><th>Section</th><th>Start</th><th>End</th><th>Duration</th><th>Departments</th><th>Tasks</th><th>Train Impact</th><th>Utilization</th><th>Priority</th></tr></thead>
+          <tbody>
+            ${blocks.map(b=>`<tr data-block="${b.id}">
+              <td class="id-cell">${b.id}</td><td>${b.section}</td><td class="mono">${b.start}</td><td class="mono">${b.end}</td>
+              <td class="mono">${b.duration} min</td><td>${b.departments.join(' + ')}</td><td>${b.taskCount} Tasks</td>
+              <td>${chip(b.trainImpact, b.trainImpact==='Low'?'green':b.trainImpact==='Medium'?'amber':'red')}</td>
+              <td class="mono">${b.utilization}%</td><td>${critChip(b.priority)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><div><h3>Impact of Optimization</h3><div class="desc">Illustrative simulation result</div></div></div>
+    <div class="panel-body">
+      <div class="before-after">
+        <div class="ba-col">
+          <h4>Before Optimization</h4>
+          <div class="ba-metric"><span>Maintenance requests</span><b>8</b></div>
+          <div class="ba-metric"><span>Separate blocks</span><b>6</b></div>
+          <div class="ba-metric"><span>Total block usage</span><b>420 min</b></div>
+          <div class="ba-metric" style="border-bottom:none;"><span>Conflicts</span><b>3</b></div>
+        </div>
+        <div class="ba-col after">
+          <h4>After Optimization</h4>
+          <div class="ba-metric"><span>Maintenance requests</span><b>8</b></div>
+          <div class="ba-metric"><span>Coordinated blocks</span><b>4</b></div>
+          <div class="ba-metric"><span>Total block usage</span><b>300 min</b></div>
+          <div class="ba-metric" style="border-bottom:none;"><span>Unresolved conflicts</span><b>0</b></div>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-top:18px;">
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Block Reduction</div><div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green);">33%</div></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Time Saved</div><div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green);">120 min</div></div>
+        <div><div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Conflict Reduction</div><div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green);">100%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3>Planning Intelligence</h3></div>
+    <div class="panel-body">
+      <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;"><b>Why was Block ${blocks[0]?.id||'B-204'} selected?</b>
+        <div class="reason-box">${blocks[0]?.reason || 'Selected because it provides sufficient maintenance duration, avoids scheduled high-priority train movements, and combines three compatible departmental tasks.'}</div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px;">Priority Factors</div>
+      ${weightBar('Criticality',92)}${weightBar('Urgency',78)}${weightBar('Asset Impact',65)}${weightBar('Overdue Status',54)}${weightBar('Operational Impact',71)}
+    </div>
+  </div>`;
+}
+function weightBar(label,val){
+  return `<div class="weight-row"><div class="weight-label">${label}</div><div class="weight-track"><div class="weight-fill" style="width:${val}%;"></div></div><div class="weight-val">${val}</div></div>`;
+}
+
+function runPlanGeneration(){
+  const btn = document.getElementById('genPlanBtn');
+  const prog = document.getElementById('genProgress');
+  btn.disabled = true; btn.style.opacity=.6;
+  prog.style.display='block';
+  document.getElementById('plannerResults').innerHTML='';
+  const steps = [0,1,2,3,4];
+  let i=0;
+  function nextStep(){
+    if(i>0){ const prev=document.getElementById('genStep'+(i-1)); prev.classList.remove('active'); prev.classList.add('done'); prev.querySelector('.gs-icon').innerHTML=ICONS.check.replace('stroke-width="2"','stroke-width="3"'); }
+    if(i<steps.length){
+      const cur = document.getElementById('genStep'+i);
+      cur.classList.add('active');
+      cur.querySelector('.gs-icon').innerHTML='<div class="spin"></div>';
+      i++;
+      setTimeout(nextStep, 550);
+    } else {
+      setTimeout(()=>{
+        STATE.planGenerated = true;
+        STATE.generatedBlocks = BLOCKS.slice(0,6);
+        btn.disabled=false; btn.style.opacity=1;
+        prog.style.display='none';
+        document.getElementById('plannerResults').innerHTML = plannerResultsHTML();
+        attachPageHandlers();
+        showToast('Optimized plan generated — 4 coordinated blocks proposed.');
+      },300);
+    }
+  }
+  nextStep();
+}
+
+/* ====================== Drawers: Task & Block detail ====================== */
+function openTaskDrawer(id){
+  const t = TASKS.find(x=>x.id===id);
+  if(!t) return;
+  openDrawer(`
+    <div class="drawer-head">
+      <div><h2>${t.id}</h2><div class="dh-sub">${ASSET_TYPES[t.dept] ? t.asset : t.asset} — ${DEPT_FULL[t.dept]}</div></div>
+      <button class="drawer-close" onclick="closeDrawer()">${ICONS.x}</button>
+    </div>
+    <div class="drawer-body">
+      <div class="dl-row"><span class="dl-k">Department</span><span class="dl-v">${t.dept}</span></div>
+      <div class="dl-row"><span class="dl-k">Asset</span><span class="dl-v">${t.asset}</span></div>
+      <div class="dl-row"><span class="dl-k">Section</span><span class="dl-v">${t.section}</span></div>
+      <div class="dl-row"><span class="dl-k">Criticality</span><span class="dl-v">${critChip(t.criticality)}</span></div>
+      <div class="dl-row"><span class="dl-k">Urgency</span><span class="dl-v">${t.urgency}</span></div>
+      <div class="dl-row"><span class="dl-k">Due Date</span><span class="dl-v">${t.dueDate}</span></div>
+      <div class="dl-row"><span class="dl-k">Estimated Duration</span><span class="dl-v">${t.duration} min</span></div>
+      <div class="dl-row"><span class="dl-k">Status</span><span class="dl-v">${statusChip(t.status)}</span></div>
+      <div class="dl-row"><span class="dl-k">Recommended Block</span><span class="dl-v">${t.blockId || 'Not yet scheduled'}</span></div>
+      <div class="dl-row" style="border-bottom:none;"><span class="dl-k">Dependencies</span><span class="dl-v">${t.dependencies.length?t.dependencies.join(', '):'None'}</span></div>
+      <div class="reason-box">This task was flagged ${t.criticality.toLowerCase()} priority based on asset condition and overdue status in the demo dataset. In the full system, this would reflect defect severity, inspection history, and operational risk scoring.</div>
+    </div>
+    <div class="drawer-actions">
+      <button class="btn" style="flex:1;justify-content:center;" onclick="closeDrawer()">Close</button>
+      <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="closeDrawer(); STATE.page='planner'; renderSidebarNav(); renderPage();">View on Block Plan</button>
+    </div>
+  `);
+}
+
+function openBlockDrawer(id){
+  const b = BLOCKS.find(x=>x.id===id) || STATE.generatedBlocks.find(x=>x.id===id);
+  if(!b) return;
+  openDrawer(`
+    <div class="drawer-head">
+      <div><h2>${b.id}</h2><div class="dh-sub">Section ${b.section} — ${b.start} to ${b.end}</div></div>
+      <button class="drawer-close" onclick="closeDrawer()">${ICONS.x}</button>
+    </div>
+    <div class="drawer-body">
+      <div class="dl-row"><span class="dl-k">Section</span><span class="dl-v">${b.section}</span></div>
+      <div class="dl-row"><span class="dl-k">Start</span><span class="dl-v">${b.start}</span></div>
+      <div class="dl-row"><span class="dl-k">End</span><span class="dl-v">${b.end}</span></div>
+      <div class="dl-row"><span class="dl-k">Duration</span><span class="dl-v">${b.duration} min</span></div>
+      <div class="dl-row"><span class="dl-k">Departments</span><span class="dl-v">${b.departments.join(', ')}</span></div>
+      <div class="dl-row"><span class="dl-k">Tasks Included</span><span class="dl-v">${b.taskCount}</span></div>
+      <div class="dl-row"><span class="dl-k">Train Conflicts Avoided</span><span class="dl-v">${b.trainImpact==='Low'?2:b.trainImpact==='Medium'?1:0}</span></div>
+      <div class="dl-row" style="border-bottom:none;"><span class="dl-k">Utilization</span><span class="dl-v">${b.utilization}%</span></div>
+      <div class="reason-box">${b.reason}</div>
+      <div class="hitl-flow">
+        <span class="hf-step">System recommends</span>→<span class="hf-step">Official reviews</span>→<span class="hf-step">Approve / Modify / Reject</span>→<span class="hf-step">Final plan</span>
+      </div>
+    </div>
+    <div class="drawer-actions">
+      <button class="btn btn-danger-outline" style="flex:1;justify-content:center;" onclick="closeDrawer(); showToast('Block ${b.id} marked rejected (simulated).')">Reject</button>
+      <button class="btn" style="flex:1;justify-content:center;" onclick="closeDrawer(); showToast('Block ${b.id} sent for modification (simulated).')">Modify</button>
+      <button class="btn btn-green-outline" style="flex:1;justify-content:center;" onclick="closeDrawer(); showToast('Block ${b.id} approved (simulated).')">Approve</button>
+    </div>
+  `);
+}
+
+/* ====================== Attach per-page interaction handlers ====================== */
+function attachPageHandlers(){
+  // row clicks -> drawers
+  document.querySelectorAll('[data-task]').forEach(el=>el.addEventListener('click',()=>openTaskDrawer(el.getAttribute('data-task'))));
+  document.querySelectorAll('[data-block]').forEach(el=>el.addEventListener('click',()=>openBlockDrawer(el.getAttribute('data-block'))));
+
+  // maintenance filters
+  const ms = document.getElementById('maintSearch');
+  if(ms){
+    ms.addEventListener('input',()=>{STATE.filters.maint.q=ms.value; renderPage();});
+    document.getElementById('maintDept').addEventListener('change',e=>{STATE.filters.maint.dept=e.target.value; renderPage();});
+    document.getElementById('maintCrit').addEventListener('change',e=>{STATE.filters.maint.crit=e.target.value; renderPage();});
+    document.getElementById('maintStatus').addEventListener('change',e=>{STATE.filters.maint.status=e.target.value; renderPage();});
+    document.querySelectorAll('#contentInner thead th[data-sk]').forEach(th=>{
+      th.addEventListener('click',()=>{
+        const k = th.getAttribute('data-sk');
+        const s = STATE.sort.maint;
+        s.dir = (s.key===k) ? -s.dir : 1; s.key=k;
+        renderPage();
+      });
+    });
+  }
+
+  // train filters
+  const ts = document.getElementById('trainSearch');
+  if(ts){
+    ts.addEventListener('input',()=>{STATE.filters.trains.q=ts.value; renderPage();});
+    document.getElementById('trainType').addEventListener('change',e=>{STATE.filters.trains.type=e.target.value; renderPage();});
+    document.getElementById('trainSection').addEventListener('change',e=>{STATE.filters.trains.section=e.target.value; renderPage();});
+  }
+
+  // weekly filters
+  const wd = document.getElementById('weeklyDept');
+  if(wd){
+    wd.addEventListener('change',e=>{STATE.filters.weekly.dept=e.target.value; renderPage();});
+    document.getElementById('weeklySection').addEventListener('change',e=>{STATE.filters.weekly.section=e.target.value; renderPage();});
+  }
+
+  // conflicts filters
+  const cs = document.getElementById('confSev');
+  if(cs){
+    cs.addEventListener('change',e=>{STATE.filters.conflicts.sev=e.target.value; renderPage();});
+    document.getElementById('confType').addEventListener('change',e=>{STATE.filters.conflicts.type=e.target.value; renderPage();});
+  }
+
+  // planner generate button
+  const genBtn = document.getElementById('genPlanBtn');
+  if(genBtn) genBtn.addEventListener('click', runPlanGeneration);
+
+  // reports actions
+  document.querySelectorAll('.report-preview').forEach(b=>b.addEventListener('click',()=>showToast('Previewing "'+b.getAttribute('data-name')+'" (simulated).')));
+  document.querySelectorAll('.report-export').forEach(b=>b.addEventListener('click',()=>showToast('Exported "'+b.getAttribute('data-name')+'" as '+b.getAttribute('data-fmt')+' (simulated).')));
+}
+
+/* ---------- init ---------- */
+renderSidebarNav();
+renderPage();
+</script>
+</body>
+</html>

@@ -18,6 +18,8 @@ const PAGE_TITLES: Record<string, { title: string, description: string }> = {
     reports: { title: "Reports", description: "Reports implementation pending." },
 };
 
+import { Dashboard } from "@/components/rmos/dashboard/Dashboard";
+
 function App() {
     const [activePage, setActivePage] = useState("dashboard");
 
@@ -28,18 +30,22 @@ function App() {
 
     return (
         <AppShell activePage={activePage} onNavigate={setActivePage}>
-            <div className="flex flex-col gap-6">
-                <PageHeader
-                    title={pageData.title}
-                    description={pageData.description}
-                />
-
-                <div className="border border-border-soft rounded-[6px] bg-white p-6">
-                    <EmptyState
-                        message={`Module scaffold \u2014 implementation pending for ${activePage}.`}
+            {activePage === "dashboard" ? (
+                <Dashboard />
+            ) : (
+                <div className="flex flex-col gap-6">
+                    <PageHeader
+                        title={pageData.title}
+                        description={pageData.description}
                     />
+
+                    <div className="border border-border-soft rounded-[6px] bg-white p-6">
+                        <EmptyState
+                            message={`Module scaffold \u2014 implementation pending for ${activePage}.`}
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
         </AppShell>
     );
 }

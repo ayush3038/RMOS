@@ -3,8 +3,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { DEMO_TASKS } from "@/data/demo/mockData";
-import type { MaintenanceTask } from "@/data/demo/types";
+import { useData } from "@/hooks/useData";
+import { getRepository } from "@/services/api";
+import type { MaintenanceTask } from "@/types/models";
 import { StatusChip } from "@/components/rmos/StatusChip";
 import type { StatusLevel } from "@/components/rmos/StatusChip";
 import { ListTodo, Clock, CalendarDays } from "lucide-react";
@@ -15,6 +16,7 @@ const capitalize = (str: string): StatusLevel => {
 };
 
 export function MaintenanceQueue() {
+    const { data: tasks, isLoading, error } = useData(() => getRepository().getMaintenanceTasks());
     const [selectedTask, setSelectedTask] = useState<MaintenanceTask | null>(null);
 
     return (
@@ -43,7 +45,22 @@ export function MaintenanceQueue() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {DEMO_TASKS.map((task) => (
+                            {isLoading && (
+                                <TableRow>
+                                    <TableCell colSpan={9} className="h-24 text-center text-slate-500">Loading tasks...</TableCell>
+                                </TableRow>
+                            )}
+                            {error && (
+                                <TableRow>
+                                    <TableCell colSpan={9} className="h-24 text-center text-red-500">Failed to load tasks</TableCell>
+                                </TableRow>
+                            )}
+                            {!isLoading && !error && (!tasks || tasks.length === 0) && (
+                                <TableRow>
+                                    <TableCell colSpan={9} className="h-24 text-center text-slate-500">No maintenance tasks.</TableCell>
+                                </TableRow>
+                            )}
+                            {!isLoading && !error && tasks && tasks.map((task) => (
                                 <TableRow
                                     key={task.id}
                                     className="cursor-pointer hover:bg-slate-50 transition-colors"

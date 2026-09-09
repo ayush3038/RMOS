@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DEMO_SECTIONS } from "@/data/demo/mockData";
+import { useData } from "@/hooks/useData";
+import { getRepository } from "@/services/api";
 import { Map, Train, Wrench, AlertOctagon } from "lucide-react";
 
 export function CorridorOverview() {
+    const { data: sections, isLoading, error } = useData(() => getRepository().getCorridorSections());
+
     return (
         <Card className="h-full">
             <CardHeader>
@@ -18,45 +21,52 @@ export function CorridorOverview() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
-                    {DEMO_SECTIONS.map((section) => (
-                        <div key={section.id} className="flex items-center gap-4 p-3 border rounded-lg bg-slate-50/50">
-                            <div className="w-24 font-medium text-sm">
-                                {section.name}
-                            </div>
+                {isLoading && <div className="text-sm text-slate-500 py-4 text-center">Loading corridors...</div>}
+                {error && <div className="text-sm text-red-500 py-4 text-center">Failed to load corridors</div>}
+                {!isLoading && !error && (!sections || sections.length === 0) && (
+                    <div className="text-sm text-slate-500 py-4 text-center">No corridor data available.</div>
+                )}
+                {!isLoading && !error && sections && (
+                    <div className="space-y-4">
+                        {sections.map((section) => (
+                            <div key={section.id} className="flex items-center gap-4 p-3 border rounded-lg bg-slate-50/50">
+                                <div className="w-24 font-medium text-sm">
+                                    {section.name}
+                                </div>
 
-                            <div className="flex-1">
-                                <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden flex">
-                                    {section.availabilityStatus === 'available' && <div className="h-full w-full bg-green-500" />}
-                                    {section.availabilityStatus === 'restricted' && <div className="h-full w-full bg-amber-500" />}
-                                    {section.availabilityStatus === 'maintenance' && <div className="h-full w-full bg-blue-500" />}
-                                    {section.availabilityStatus === 'blocked' && <div className="h-full w-full bg-red-500" />}
+                                <div className="flex-1">
+                                    <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden flex">
+                                        {section.availabilityStatus === 'available' && <div className="h-full w-full bg-green-500" />}
+                                        {section.availabilityStatus === 'restricted' && <div className="h-full w-full bg-amber-500" />}
+                                        {section.availabilityStatus === 'maintenance' && <div className="h-full w-full bg-blue-500" />}
+                                        {section.availabilityStatus === 'blocked' && <div className="h-full w-full bg-red-500" />}
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 w-40 justify-end">
+                                    {section.currentTrains > 0 && (
+                                        <Badge variant="outline" className="flex items-center gap-1 font-mono text-xs text-slate-600">
+                                            <Train className="h-3 w-3" />
+                                            {section.currentTrains}
+                                        </Badge>
+                                    )}
+                                    {section.upcomingMaintenanceCode && (
+                                        <Badge variant="secondary" className="flex items-center gap-1 font-mono text-xs bg-blue-100 text-blue-700">
+                                            <Wrench className="h-3 w-3" />
+                                            {section.upcomingMaintenanceCode}
+                                        </Badge>
+                                    )}
+                                    {section.availabilityStatus === 'blocked' && (
+                                        <Badge variant="destructive" className="flex items-center gap-1 text-xs">
+                                            <AlertOctagon className="h-3 w-3" />
+                                            Blocked
+                                        </Badge>
+                                    )}
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-3 w-40 justify-end">
-                                {section.currentTrains > 0 && (
-                                    <Badge variant="outline" className="flex items-center gap-1 font-mono text-xs text-slate-600">
-                                        <Train className="h-3 w-3" />
-                                        {section.currentTrains}
-                                    </Badge>
-                                )}
-                                {section.upcomingMaintenanceCode && (
-                                    <Badge variant="secondary" className="flex items-center gap-1 font-mono text-xs bg-blue-100 text-blue-700">
-                                        <Wrench className="h-3 w-3" />
-                                        {section.upcomingMaintenanceCode}
-                                    </Badge>
-                                )}
-                                {section.availabilityStatus === 'blocked' && (
-                                    <Badge variant="destructive" className="flex items-center gap-1 text-xs">
-                                        <AlertOctagon className="h-3 w-3" />
-                                        Blocked
-                                    </Badge>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
 
                 <div className="flex items-center gap-4 mt-6 text-xs text-muted-foreground justify-end">
                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500" /> Available</div>

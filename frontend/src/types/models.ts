@@ -4,13 +4,13 @@ export type TaskStatus = "pending" | "scheduled" | "in-progress" | "completed";
 
 export interface MaintenanceTask {
     id: string;
-    taskCode: string; // User friendly ID, e.g. TSK-1002
+    taskCode: string;
     department: Department;
-    assetType: string; // e.g. Track, OHE, Signal
+    assetType: string;
     sectionId: string;
     criticality: PriorityLevel;
     urgency: PriorityLevel;
-    dueDate: string; // ISO Date String
+    dueDate: string;
     durationMinutes: number;
     status: TaskStatus;
     dependencies?: string[];
@@ -32,8 +32,8 @@ export interface DepartmentRequest {
     department: Department;
     activity: string;
     sectionId: string;
-    requestedWindowStart: string; // e.g. '02:00'
-    requestedWindowEnd: string; // e.g. '04:00'
+    requestedWindowStart: string;
+    requestedWindowEnd: string;
     isSimulation: boolean;
 }
 
@@ -47,14 +47,6 @@ export interface Conflict {
     isSimulation: boolean;
 }
 
-export interface OperationalEvent {
-    id: string;
-    timestamp: string; // ISO date string
-    type: "maintenance_updated" | "block_changed" | "train_delayed" | "request_added" | "conflict_detected";
-    message: string;
-    isSimulation: boolean;
-}
-
 export interface DashboardKpis {
     criticalMaintenance: number;
     overdueTasks: number;
@@ -62,5 +54,13 @@ export interface DashboardKpis {
     activeConflicts: number;
     assetAvailabilityPercent: number;
     blockUtilizationPercent: number;
+    isSimulation: boolean;
+}
+
+export interface OperationalEvent {
+    id: string;
+    timestamp: string;
+    type: "maintenance_updated" | "block_changed" | "train_delayed" | "request_added" | "conflict_detected" | "conflict_resolved";
+    message: string;
     isSimulation: boolean;
 }

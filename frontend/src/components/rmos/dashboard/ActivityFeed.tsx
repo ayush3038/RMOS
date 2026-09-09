@@ -1,8 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { DEMO_EVENTS } from "@/data/demo/mockData";
+import { useData } from "@/hooks/useData";
+import { getRepository } from "@/services/api";
 import { Activity, Bell, AlertTriangle, CalendarRange, Clock, Wrench } from "lucide-react";
 
 export function ActivityFeed() {
+    const { data: events, isLoading, error } = useData(() => getRepository().getRecentEvents());
+
     const getEventIcon = (type: string) => {
         switch (type) {
             case "conflict_detected": return <AlertTriangle className="h-4 w-4 text-red-500" />;
@@ -33,22 +36,29 @@ export function ActivityFeed() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
-                    {DEMO_EVENTS.map((event) => (
-                        <div key={event.id} className="flex gap-3 relative pb-4 last:pb-0">
-                            <div className="mt-0.5 shrink-0 bg-slate-100 p-1.5 rounded-full z-10 border border-white">
-                                {getEventIcon(event.type)}
-                            </div>
+                {isLoading && <div className="text-sm text-slate-500 py-4 text-center">Loading activity...</div>}
+                {error && <div className="text-sm text-red-500 py-4 text-center">Failed to load activity</div>}
+                {!isLoading && !error && (!events || events.length === 0) && (
+                    <div className="text-sm text-slate-500 py-4 text-center">No recent activity.</div>
+                )}
+                {!isLoading && !error && events && (
+                    <div className="space-y-4">
+                        {events.map((event) => (
+                            <div key={event.id} className="flex gap-3 relative pb-4 last:pb-0">
+                                <div className="mt-0.5 shrink-0 bg-slate-100 p-1.5 rounded-full z-10 border border-white">
+                                    {getEventIcon(event.type)}
+                                </div>
 
-                            <div className="absolute left-[15px] top-8 bottom-0 w-px bg-slate-200 -z-0 last:hidden" />
+                                <div className="absolute left-[15px] top-8 bottom-0 w-px bg-slate-200 -z-0 last:hidden" />
 
-                            <div>
-                                <div className="text-sm font-medium text-slate-800">{event.message}</div>
-                                <div className="text-xs text-muted-foreground mt-0.5">{formatTime(event.timestamp)}</div>
+                                <div>
+                                    <div className="text-sm font-medium text-slate-800">{event.message}</div>
+                                    <div className="text-xs text-muted-foreground mt-0.5">{formatTime(event.timestamp)}</div>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

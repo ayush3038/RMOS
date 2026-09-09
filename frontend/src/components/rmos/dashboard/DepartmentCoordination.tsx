@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DEMO_DEPARTMENT_REQUESTS } from "@/data/demo/mockData";
+import { useData } from "@/hooks/useData";
+import { getRepository } from "@/services/api";
 import { Network, Wand2, Clock } from "lucide-react";
 
 export function DepartmentCoordination() {
+    const { data: requests, isLoading, error } = useData(() => getRepository().getDepartmentRequests());
+
     return (
         <Card className="h-full">
             <CardHeader>
@@ -24,7 +27,12 @@ export function DepartmentCoordination() {
                 <div className="space-y-4">
                     <div className="space-y-3">
                         <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Individual Requests</h4>
-                        {DEMO_DEPARTMENT_REQUESTS.map((req) => (
+                        {isLoading && <div className="text-sm text-slate-500 py-4 text-center">Loading requests...</div>}
+                        {error && <div className="text-sm text-red-500 py-4 text-center">Failed to load requests</div>}
+                        {!isLoading && !error && (!requests || requests.length === 0) && (
+                            <div className="text-sm text-slate-500 py-4 text-center">No department requests.</div>
+                        )}
+                        {!isLoading && !error && requests && requests.map((req) => (
                             <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-md bg-white text-sm shadow-sm">
                                 <div>
                                     <div className="font-medium">{req.department}</div>

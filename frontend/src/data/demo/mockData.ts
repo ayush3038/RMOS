@@ -5,7 +5,7 @@ import type {
     Conflict,
     OperationalEvent,
     DashboardKpis
-} from "./types";
+} from "@/types/models";
 
 export const DEMO_KPIS: DashboardKpis = {
     criticalMaintenance: 14,

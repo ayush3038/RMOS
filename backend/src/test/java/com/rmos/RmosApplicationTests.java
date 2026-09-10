@@ -5,6 +5,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import com.rmos.repository.AssetRepository;
 import com.rmos.repository.MaintenanceTaskRepository;
+import com.rmos.repository.SourceDataRecordRepository;
+import com.rmos.repository.CanonicalAssetMappingRepository;
 
 @SpringBootTest(properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
@@ -21,6 +23,12 @@ class RmosApplicationTests {
 
     @MockBean
     private MaintenanceTaskRepository maintenanceTaskRepository;
+
+    @MockBean
+    private SourceDataRecordRepository sourceDataRecordRepository;
+
+    @MockBean
+    private CanonicalAssetMappingRepository canonicalAssetMappingRepository;
 
     @Test
     void contextLoads() {

@@ -27,3 +27,20 @@ management:
   endpoint:
     health:
       show-details: always
+
+rmos:
+  integration:
+    data-freshness:
+      threshold-minutes: 60
+  priority:
+    weights:
+      safety: 0.30
+      train-impact: 0.25
+      criticality: 0.20
+      urgency: 0.15
+      duration: 0.05
+      workforce: 0.05
+    thresholds:
+      critical: 0.80
+      high: 0.60
+      medium: 0.35

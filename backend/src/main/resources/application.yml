@@ -44,3 +44,6 @@ rmos:
       critical: 0.80
       high: 0.60
       medium: 0.35
+  optimization:
+    max-seconds: 5
+    workers: 4

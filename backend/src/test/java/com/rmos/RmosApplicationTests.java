@@ -7,6 +7,7 @@ import com.rmos.repository.AssetRepository;
 import com.rmos.repository.MaintenanceTaskRepository;
 import com.rmos.repository.SourceDataRecordRepository;
 import com.rmos.repository.CanonicalAssetMappingRepository;
+import com.rmos.repository.decision.PlanDecisionAuditRepository;
 
 @SpringBootTest(properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
@@ -29,6 +30,9 @@ class RmosApplicationTests {
 
     @MockBean
     private CanonicalAssetMappingRepository canonicalAssetMappingRepository;
+
+    @MockBean
+    private PlanDecisionAuditRepository planDecisionAuditRepository;
 
     @Test
     void contextLoads() {

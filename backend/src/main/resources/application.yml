@@ -44,6 +44,23 @@ rmos:
       critical: 0.80
       high: 0.60
       medium: 0.35
+  asset-risk:
+    weights:
+      overdue: 0.20
+      failure-history: 0.25
+      recent-failure: 0.25
+      maintenance-recency: 0.15
+      critical-maintenance: 0.15
+    references:
+      overdue-tasks: 5
+      recent-failures: 3
+      maintenance-days: 180
+      critical-maintenance: 3
+    thresholds:
+      very-high: 0.80
+      high: 0.60
+      medium: 0.35
+      low: 0.15
   optimization:
     max-seconds: 5
     workers: 4

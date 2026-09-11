@@ -20,6 +20,9 @@ public class PlanningRequest {
     @Valid
     private List<PlanningConstraint> constraints;
 
+    @Valid
+    private RailwayPlanningContext planningContext;
+
     @NotNull(message = "Planning window start must not be null")
     private LocalDateTime planningWindowStart;
 
@@ -64,5 +67,13 @@ public class PlanningRequest {
 
     public void setPlanningWindowEnd(LocalDateTime planningWindowEnd) {
         this.planningWindowEnd = planningWindowEnd;
+    }
+
+    public RailwayPlanningContext getPlanningContext() {
+        return planningContext;
+    }
+
+    public void setPlanningContext(RailwayPlanningContext planningContext) {
+        this.planningContext = planningContext;
     }
 }

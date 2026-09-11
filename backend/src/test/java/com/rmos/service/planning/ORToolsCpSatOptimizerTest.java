@@ -219,4 +219,75 @@ class ORToolsCpSatOptimizerTest {
         assertNotNull(res.getExplanation());
         assertTrue(res.getExplanation().contains("CP-SAT optimization executed"));
     }
+
+    @Test
+    void optimize_TaskInAvailableBlockWindow_IsScheduled() {
+        PlanningRequest req = createEmptyRequest();
+        com.rmos.dto.planning.RailwayPlanningContext ctx = new com.rmos.dto.planning.RailwayPlanningContext();
+        com.rmos.dto.planning.MaintenanceBlockWindow w = new com.rmos.dto.planning.MaintenanceBlockWindow();
+        w.setSectionId("S1");
+        w.setStatus(com.rmos.domain.planning.BlockWindowStatus.AVAILABLE);
+        w.setWindowStart(WINDOW_START.plusHours(1));
+        w.setWindowEnd(WINDOW_START.plusHours(3));
+        ctx.setBlockWindows(Collections.singletonList(w));
+        req.setPlanningContext(ctx);
+
+        com.rmos.dto.planning.RailwayPlanningTask task = new com.rmos.dto.planning.RailwayPlanningTask();
+        task.setTaskId(1L);
+        task.setAssetId(99L);
+        task.setDurationMinutes(60);
+        task.setSectionId("S1");
+        req.setTasks(Collections.singletonList(task));
+
+        PlanningResult res = optimizer.optimize(req);
+        assertEquals(PlanningTaskStatus.SCHEDULED, res.getAssignments().get(0).getStatus());
+        assertTrue(!res.getAssignments().get(0).getAssignedStart().isBefore(WINDOW_START.plusHours(1)));
+    }
+
+    @Test
+    void optimize_TaskOutsideAvailableWindows_IsUnscheduled() {
+        PlanningRequest req = createEmptyRequest();
+        com.rmos.dto.planning.RailwayPlanningContext ctx = new com.rmos.dto.planning.RailwayPlanningContext();
+        com.rmos.dto.planning.MaintenanceBlockWindow w = new com.rmos.dto.planning.MaintenanceBlockWindow();
+        w.setSectionId("S1");
+        // Reserved block should not be used
+        w.setStatus(com.rmos.domain.planning.BlockWindowStatus.RESERVED);
+        w.setWindowStart(WINDOW_START.plusHours(1));
+        w.setWindowEnd(WINDOW_START.plusHours(3));
+        ctx.setBlockWindows(Collections.singletonList(w));
+        req.setPlanningContext(ctx);
+
+        com.rmos.dto.planning.RailwayPlanningTask task = new com.rmos.dto.planning.RailwayPlanningTask();
+        task.setTaskId(1L);
+        task.setAssetId(99L);
+        task.setDurationMinutes(60);
+        task.setSectionId("S1");
+        req.setTasks(Collections.singletonList(task));
+
+        PlanningResult res = optimizer.optimize(req);
+        assertEquals(PlanningTaskStatus.UNSCHEDULED, res.getAssignments().get(0).getStatus());
+    }
+
+    @Test
+    void optimize_TaskMismatchedSection_IsUnscheduled() {
+        PlanningRequest req = createEmptyRequest();
+        com.rmos.dto.planning.RailwayPlanningContext ctx = new com.rmos.dto.planning.RailwayPlanningContext();
+        com.rmos.dto.planning.MaintenanceBlockWindow w = new com.rmos.dto.planning.MaintenanceBlockWindow();
+        w.setSectionId("S2"); // Different section
+        w.setStatus(com.rmos.domain.planning.BlockWindowStatus.AVAILABLE);
+        w.setWindowStart(WINDOW_START.plusHours(1));
+        w.setWindowEnd(WINDOW_START.plusHours(3));
+        ctx.setBlockWindows(Collections.singletonList(w));
+        req.setPlanningContext(ctx);
+
+        com.rmos.dto.planning.RailwayPlanningTask task = new com.rmos.dto.planning.RailwayPlanningTask();
+        task.setTaskId(1L);
+        task.setAssetId(99L);
+        task.setDurationMinutes(60);
+        task.setSectionId("S1");
+        req.setTasks(Collections.singletonList(task));
+
+        PlanningResult res = optimizer.optimize(req);
+        assertEquals(PlanningTaskStatus.UNSCHEDULED, res.getAssignments().get(0).getStatus());
+    }
 }

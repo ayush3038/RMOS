@@ -15,6 +15,11 @@ import com.rmos.dto.planning.PlanAssignment;
 import com.rmos.dto.planning.PlanningRequest;
 import com.rmos.dto.planning.PlanningResult;
 import com.rmos.dto.planning.PlanningTask;
+import com.rmos.dto.planning.RailwayPlanningTask;
+import com.rmos.dto.planning.RailwayPlanningContext;
+import com.rmos.dto.planning.MaintenanceBlockWindow;
+import com.rmos.domain.planning.BlockWindowStatus;
+import com.rmos.dto.planning.WorkforceProfile;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
@@ -97,6 +102,49 @@ public class ORToolsCpSatOptimizer implements PlanningOptimizer {
                     scheduledVar, "interval_" + task.getTaskId());
 
             // Bind task-specific windows if structurally safe
+            if (task instanceof RailwayPlanningTask rTask) {
+                WorkforceProfile wp = rTask.getWorkforceProfile();
+                if (wp != null && wp.getRequiredTeams() != null && wp.getAvailableTeams() != null) {
+                    if (wp.getRequiredTeams() > wp.getAvailableTeams()) {
+                        model.addEquality(scheduledVar, 0); // Force UNSCHEDULED
+                    }
+                }
+
+                if (rTask.getSectionId() != null && request.getPlanningContext() != null
+                        && request.getPlanningContext().getBlockWindows() != null) {
+                    List<MaintenanceBlockWindow> validWindows = request.getPlanningContext().getBlockWindows().stream()
+                            .filter(w -> rTask.getSectionId().equals(w.getSectionId()))
+                            .filter(w -> w.getStatus() == BlockWindowStatus.AVAILABLE)
+                            .toList();
+
+                    if (validWindows.isEmpty()) {
+                        model.addEquality(scheduledVar, 0);
+                    } else if (validWindows.size() == 1) {
+                        MaintenanceBlockWindow w = validWindows.get(0);
+                        int wStart = toMinuteOffset(windowStart, w.getWindowStart());
+                        int wEnd = toMinuteOffset(windowStart, w.getWindowEnd());
+                        model.addGreaterOrEqual(startVar, wStart).onlyEnforceIf(scheduledVar);
+                        model.addLessOrEqual(endVar, wEnd).onlyEnforceIf(scheduledVar);
+                    } else {
+                        List<BoolVar> windowVars = new ArrayList<>();
+                        for (int i = 0; i < validWindows.size(); i++) {
+                            MaintenanceBlockWindow w = validWindows.get(i);
+                            BoolVar wVar = model.newBoolVar("window_" + i + "_" + task.getTaskId());
+                            int wStart = toMinuteOffset(windowStart, w.getWindowStart());
+                            int wEnd = toMinuteOffset(windowStart, w.getWindowEnd());
+
+                            model.addGreaterOrEqual(startVar, wStart).onlyEnforceIf(wVar);
+                            model.addLessOrEqual(endVar, wEnd).onlyEnforceIf(wVar);
+                            model.addImplication(wVar, scheduledVar);
+                            windowVars.add(wVar);
+                        }
+                        com.google.ortools.sat.Literal[] arr = windowVars
+                                .toArray(new com.google.ortools.sat.Literal[0]);
+                        model.addBoolOr(arr).onlyEnforceIf(scheduledVar);
+                    }
+                }
+            }
+
             if (task.getEarliestStart() != null) {
                 int earliestOffset = toMinuteOffset(windowStart, task.getEarliestStart());
                 if (earliestOffset > 0) {

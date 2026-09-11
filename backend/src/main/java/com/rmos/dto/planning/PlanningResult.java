@@ -10,6 +10,7 @@ public class PlanningResult {
     private PlanningDecisionStatus decisionStatus;
     private List<PlanAssignment> assignments;
     private List<PlanningConstraint> violatedConstraints;
+    private List<OperationalConstraintEvaluation> operationalConstraintEvaluations;
     private Double objectiveScore;
     private String explanation;
 
@@ -43,6 +44,15 @@ public class PlanningResult {
 
     public void setViolatedConstraints(List<PlanningConstraint> violatedConstraints) {
         this.violatedConstraints = violatedConstraints;
+    }
+
+    public List<OperationalConstraintEvaluation> getOperationalConstraintEvaluations() {
+        return operationalConstraintEvaluations;
+    }
+
+    public void setOperationalConstraintEvaluations(
+            List<OperationalConstraintEvaluation> operationalConstraintEvaluations) {
+        this.operationalConstraintEvaluations = operationalConstraintEvaluations;
     }
 
     public Double getObjectiveScore() {

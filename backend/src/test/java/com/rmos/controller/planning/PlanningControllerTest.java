@@ -74,7 +74,8 @@ class PlanningControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.planningId").value("PLAN-999"))
-                .andExpect(jsonPath("$.decisionStatus").value("FEASIBLE"));
+                .andExpect(jsonPath("$.decisionStatus").value("FEASIBLE"))
+                .andExpect(jsonPath("$.operationalConstraintEvaluations").doesNotExist());
     }
 
     @Test
@@ -86,5 +87,27 @@ class PlanningControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void plan_ValidRailwayRequest_ReturnsResult() throws Exception {
+        PlanningRequest request = createValidRequest();
+        com.rmos.dto.planning.RailwayPlanningContext ctx = new com.rmos.dto.planning.RailwayPlanningContext();
+        ctx.setPlanningWindowStart(LocalDateTime.now());
+        ctx.setPlanningWindowEnd(LocalDateTime.now().plusHours(10));
+        request.setPlanningContext(ctx);
+
+        PlanningResult result = new PlanningResult();
+        result.setPlanningId("PLAN-RAIL");
+        result.setDecisionStatus(PlanningDecisionStatus.FEASIBLE);
+        result.setOperationalConstraintEvaluations(Collections.emptyList());
+
+        when(planningService.plan(any(PlanningRequest.class))).thenReturn(result);
+
+        mockMvc.perform(post("/api/planning/plan")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.planningId").value("PLAN-RAIL"));
     }
 }

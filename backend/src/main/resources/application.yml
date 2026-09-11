@@ -32,6 +32,13 @@ rmos:
   integration:
     data-freshness:
       threshold-minutes: 60
+  ai:
+    nim:
+      base-url: ${RMOS_NIM_BASE_URL:http://localhost:8000}
+      model: ${RMOS_NIM_MODEL:}
+      api-key: ${RMOS_NIM_API_KEY:}
+      timeout-seconds: 30
+      enabled: false
   priority:
     weights:
       safety: 0.30

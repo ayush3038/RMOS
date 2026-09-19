@@ -1,9 +1,9 @@
-# RMOS AI-Assisted Development Prompts
+RMOS AI-Assisted Development Prompts
 
 These prompts are intended for coding agents/LLMs. They do not authorize the model to invent railway rules, APIs or operational facts.
 
-## 1. Build a feature
-```text
+1. Build a feature
+
 You are working on RMOS, a Railway Maintenance Optimization System.
 Read PRD.md, ARCHITECTURE.md, DATABASE.md, API.md, STYLEGUIDE.md and RULES.md before changing code.
 
@@ -17,10 +17,9 @@ Requirements:
 5. Do not invent external railway API details.
 6. Update API/database documentation if the contract changes.
 7. Report files changed and any assumptions.
-```
 
-## 2. Build an optimization scenario
-```text
+2. Build an optimization scenario
+
 Implement one RMOS block-planning scenario using synthetic data.
 
 Inputs:
@@ -37,10 +36,9 @@ Hard constraints must not be violated.
 Objective should conceptually minimize train disruption, maintenance lateness, asset downtime, number of separate blocks and resource conflicts.
 Do not invent final production weights; make them configurable.
 Return infeasibility/conflict details when no feasible plan exists.
-```
 
-## 3. Generate an explanation
-```text
+3. Generate an explanation
+
 You are an explanation layer for an already-computed RMOS schedule.
 Never create or modify schedule decisions.
 Summarize only the supplied structured facts.
@@ -52,19 +50,17 @@ Explain:
 - conflicts avoided
 - data freshness warnings
 Return strict JSON matching the supplied schema.
-```
 
-## 4. Summarize maintenance data
-```text
+4. Summarize maintenance data
+
 Summarize the supplied maintenance records for an authorized railway reviewer.
 Do not diagnose equipment beyond the provided data.
 Do not invent asset health, urgency or failure causes.
 Separate observed facts from model-derived scores.
 Mention stale/unknown data explicitly.
-```
 
-## 5. Code review
-```text
+5. Code review
+
 Review this RMOS change for:
 - safety boundary violations
 - scheduling decisions made by the LLM
@@ -76,21 +72,18 @@ Review this RMOS change for:
 - poor handling of stale data
 - missing tests
 Return findings by severity and exact file/line when available.
-```
 
-## 6. Frontend refinement
-```text
+6. Frontend refinement
+
 Refine the RMOS UI without changing functionality.
 Maintain professional railway-operations styling.
 Remove neon/glow styling and decorative AI effects.
 Keep information dense but readable.
 Ensure responsive behavior and zero unnecessary horizontal scrolling.
 Use consistent Lucide icons and existing design tokens.
-```
 
+7. Frontend build prompt using the reference UI
 
-## 7. Frontend build prompt using the reference UI
-```text
 Build/refactor the RMOS frontend using the uploaded RAILSYNC HTML prototype as the visual and interaction reference.
 
 Preserve its overall layout language:
@@ -106,10 +99,9 @@ Preserve its overall layout language:
 - responsive navigation and mobile fallbacks
 
 Adapt all branding and domain terminology to RMOS. Do not copy unsupported railway facts from the reference. Do not introduce neon, glow, excessive gradients or decorative AI imagery. Preserve existing functionality while improving maintainability through reusable typed components.
-```
 
-## 8. Realtime synthetic-data prompt
-```text
+8. Realtime synthetic-data prompt
+
 Implement a realistic RMOS Simulation Mode for the prototype. Live railway integrations are unavailable, so synthetic data must evolve automatically during a demo.
 
 Requirements:
@@ -128,9 +120,7 @@ Requirements:
 10. Never let the simulator directly approve or execute a railway block.
 
 Create scenario presets for normal operations, delayed train, urgent maintenance and multi-department coordination.
-```
 
-## 9. Simulation event generator review prompt
-```text
+9. Simulation event generator review prompt
+
 Review the simulator for realism and consistency. Check that events are bounded, time-aware, correlated, reproducible with a seed, ordered by sequence, explicit about freshness, and unable to create impossible domain states. Check that a simulated event cannot bypass safety constraints, authorization, human approval or audit logging.
-```

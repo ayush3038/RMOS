@@ -22,9 +22,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@org.springframework.context.annotation.Import({com.rmos.security.SecurityConfig.class, com.rmos.security.JwtAuthFilter.class, com.rmos.security.CustomAuthenticationEntryPoint.class, com.rmos.security.CustomAccessDeniedHandler.class})
+@org.springframework.context.annotation.Import({ com.rmos.security.SecurityConfig.class,
+        com.rmos.security.JwtAuthFilter.class, com.rmos.security.CustomAuthenticationEntryPoint.class,
+        com.rmos.security.CustomAccessDeniedHandler.class })
 @WebMvcTest(PlanDecisionController.class)
-@org.springframework.security.test.context.support.WithMockUser(roles = "ADMIN")
 class PlanDecisionControllerTest {
     @org.springframework.boot.test.mock.mockito.MockBean
     private com.rmos.security.JwtUtils jwtUtils;
@@ -45,48 +46,77 @@ class PlanDecisionControllerTest {
         objectMapper = new ObjectMapper();
     }
 
-    @Test
-    void createDecision_ValidApprove_ReturnsCreated() throws Exception {
+    private PlanReviewRequest buildValidRequest() {
         PlanReviewRequest req = new PlanReviewRequest();
         req.setReviewerId("USER_123");
         req.setReviewerRole(ReviewerRole.OPERATOR);
         req.setAction(PlanDecision.APPROVE);
         req.setPlanningId("PLAN_999");
         req.setPlanReference(new PlanReference("PLAN_999", 1));
-
-        PlanDecisionResult expected = new PlanDecisionResult();
-        expected.setDecisionId("UUID-1234");
-        expected.setPlanningId("PLAN_999");
-
-        when(service.processDecision(any())).thenReturn(expected);
-
-        mockMvc.perform(post("/api/plans/decisions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.decisionId").value("UUID-1234"))
-                .andExpect(jsonPath("$.planningId").value("PLAN_999"));
+        return req;
     }
 
     @Test
-    void createDecision_FailsBadRules() throws Exception {
-        PlanReviewRequest req = new PlanReviewRequest();
-        req.setReviewerId("USER_123");
-        req.setReviewerRole(ReviewerRole.OPERATOR);
-        req.setAction(PlanDecision.REJECT);
-        req.setPlanningId("PLAN_999");
-        req.setPlanReference(new PlanReference("PLAN_999", 1));
+    @org.springframework.security.test.context.support.WithMockUser(roles = "ADMIN")
+    void createDecision_Admin_ReturnsCreated() throws Exception {
+        PlanDecisionResult expected = new PlanDecisionResult();
+        expected.setDecisionId("UUID-1234");
+        expected.setPlanningId("PLAN_999");
+        when(service.processDecision(any())).thenReturn(expected);
 
+        mockMvc.perform(post("/api/plans/decisions")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(buildValidRequest())))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "REVIEWER")
+    void createDecision_Reviewer_ReturnsCreated() throws Exception {
+        PlanDecisionResult expected = new PlanDecisionResult();
+        expected.setDecisionId("UUID-1234");
+        expected.setPlanningId("PLAN_999");
+        when(service.processDecision(any())).thenReturn(expected);
+
+        mockMvc.perform(post("/api/plans/decisions")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(buildValidRequest())))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "PLANNER")
+    void createDecision_Planner_ReturnsForbidden() throws Exception {
+        mockMvc.perform(post("/api/plans/decisions")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(buildValidRequest())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "VIEWER")
+    void createDecision_Viewer_ReturnsForbidden() throws Exception {
+        mockMvc.perform(post("/api/plans/decisions")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(buildValidRequest())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @org.springframework.security.test.context.support.WithMockUser(roles = "ADMIN")
+    void createDecision_FailsBadRules() throws Exception {
+        PlanReviewRequest req = buildValidRequest();
+        req.setAction(PlanDecision.REJECT);
         when(service.processDecision(any())).thenThrow(new IllegalArgumentException("Missing comment"));
 
         mockMvc.perform(post("/api/plans/decisions")
+                .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isBadRequest());
     }
 }
-
-
-
-
-

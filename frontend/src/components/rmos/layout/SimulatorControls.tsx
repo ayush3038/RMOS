@@ -59,6 +59,8 @@ export function SimulatorControls() {
                 <option value="TRAIN_DELAY">Train Delay</option>
                 <option value="URGENT_MAINTENANCE">Urgent Maint</option>
                 <option value="BLOCK_UNAVAILABLE">Block UnAvail</option>
+                <option value="MAINTENANCE_OVERRUN">Maint Overrun</option>
+                <option value="MULTI_DEPARTMENT_COORDINATION">Multi-Dept Coord</option>
             </select>
 
             <button

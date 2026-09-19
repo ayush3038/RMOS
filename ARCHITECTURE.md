@@ -172,7 +172,20 @@ Generate explanation.
 
 Send revised plan for human approval.
 
-8. Security
+## 8. Integration Boundaries & Adapters
+
+RMOS strictly operates as a decision-support system. It uses `IncidentContext` schemas as validation gateways ensuring:
+- **Canonical normalization**: Raw upstream payloads (e.g. `TRAIN_DELAY` from TMS) are mapped into explicit `RailwayPlanningContext` locational/time limits.
+- **Idempotent Isolation**: Stale payloads and duplicate collisions (driven by upstream systems) are securely dropped. 
+- **Conflict Handling**: Conflicting timing constraints raise explicitly into a `DATA_CONFLICT` status, avoiding silent assumptions or hallucinating mapping paths.
+- **Retries**: Upstream operations utilize exponential backoff limiters explicitly for network timeouts only, avoiding 'retry storms' across authenticated routes or validation errors.
+
+## 9. Realtime Synchronization & Deferred Caching Layer (Redis)
+
+Current architectural loads are processed rapidly across PostgreSQL `@Version` optimistic locks, raising cleanly back onto API clients as `409 CONFLICT` payloads whenever racing validations collapse.
+**Redis** remains explicitly **deferred** from this prototype boundary because PostgreSQL's atomic constraints provide absolutely sufficient data hygiene limits without requiring distributed locking grids for current throughput benchmarks.
+
+## 10. Security
 
 Spring Security + JWT for prototype authorization. Roles should be explicit, for example:
 

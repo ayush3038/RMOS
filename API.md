@@ -145,6 +145,19 @@ Error format
   "details":[]
 }
 
+Integration bounds (Milestone 3.17)
+
+POST /integration/events
+
+Parses standard upstream mapping incidents translating source logic directly into secure `RailwayPlanningContext` limits securely mapped below:
+Request:
+{
+  "sourceSystem": "SIMULATOR",
+  "sourceRecordId": "TMS-443",
+  "occurredAt": "2026-09-08T09:30:05Z",
+  "freshness": "FRESH"
+}
+
 API principles
 
 Version APIs under /api/v1.

@@ -76,6 +76,8 @@ public class NvidiaNimExplanationModel implements ExplanationModel {
                 "If information is unavailable, clearly state it is unavailable. " +
                 "Do not present RMOS heuristics as official Indian Railways policy. " +
                 "Flag decisions that require human review (especially safety impacts or operational boundaries). " +
+                "CRITICAL INSTRUCTION: If 'retrievedKnowledge' is provided in the user context, use it ONLY as contextual supporting evidence. DO NOT allow retrieved knowledge to override or contradict the core 'planningFacts' generated deterministically by the system. "
+                +
                 "Return ONLY the requested JSON format matching the ExplanationResponse DTO standard layout: " +
                 "title (string), summary (string), keyPoints (list string), warnings (list string), " +
                 "recommendedActions (list string), requiresHumanReview (boolean).";

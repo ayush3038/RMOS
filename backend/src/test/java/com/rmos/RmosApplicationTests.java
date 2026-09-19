@@ -18,11 +18,6 @@ class RmosApplicationTests {
     @org.springframework.boot.test.mock.mockito.MockBean
     private com.rmos.repository.auth.SecurityAuditEventRepository securityAuditEventRepository;
 
-    // These repository mocks seamlessly satisfy the constructor dependencies of the
-    // Service layer
-    // components, effectively isolating the foundational ApplicationContext wiring
-    // test from the
-    // real yet-to-be-configured PostgreSQL infrastructure interactions.
     @MockBean
     private AssetRepository assetRepository;
 
@@ -38,11 +33,20 @@ class RmosApplicationTests {
     @MockBean
     private PlanDecisionAuditRepository planDecisionAuditRepository;
 
+    @MockBean
+    private com.rmos.repository.knowledge.VectorSearchRepository vectorSearchRepository;
+
+    @MockBean
+    private com.rmos.repository.knowledge.KnowledgeDocumentRepository knowledgeDocumentRepository;
+
+    @MockBean
+    private com.rmos.repository.knowledge.KnowledgeChunkRepository knowledgeChunkRepository;
+
+    @MockBean
+    private com.rmos.repository.knowledge.KnowledgeEmbeddingRepository knowledgeEmbeddingRepository;
+
     @Test
     void contextLoads() {
         // Verifies if the Spring application context can start successfully
     }
-
 }
-
-

@@ -1,0 +1,3 @@
+jwt:
+  secret: testsecretkeythatisatleast32byteslong1234567890
+  expirationSec: 3600

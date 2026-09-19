@@ -47,8 +47,10 @@ export function SimulatorControls() {
     };
 
     return (
-        <div className="flex items-center gap-2 bg-paper border border-border rounded-[6px] px-2 py-1 relative">
-            <span className="text-[11px] font-bold text-muted uppercase tracking-wider pr-1">Ops_Sim</span>
+        <div className="flex items-center gap-2 px-3 py-1 bg-slate-900 rounded border border-slate-700 shadow-sm relative">
+            <span className="text-xs font-semibold text-slate-300 uppercase tracking-widest bg-amber-900/40 text-amber-300 px-1.5 py-0.5 rounded border border-amber-800">
+                Demo Injector
+            </span>
 
             <select
                 value={scenario}

@@ -15,7 +15,7 @@ import java.util.Date;
 @Component
 public class JwtUtils {
 
-    @Value("${jwt.secret:defaultSecretKeyThatIsAtLeast32BytesLong1234567890}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Value("${jwt.expirationSec:3600}")

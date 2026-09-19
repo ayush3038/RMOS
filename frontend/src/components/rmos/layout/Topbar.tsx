@@ -1,4 +1,5 @@
 import { Menu, Bell, CircleHelp } from "lucide-react";
+import { SimulatorControls } from "./SimulatorControls";
 
 interface TopbarProps {
     onOpenSidebar: () => void;
@@ -32,8 +33,12 @@ export function Topbar({
                 </div>
 
                 <div className="hidden sm:inline-flex items-center gap-1.5 bg-amber-bg text-amber border border-amber-line text-[10.5px] font-bold tracking-[0.4px] px-2 py-[3px] rounded-full uppercase shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
                     SIMULATION MODE
+                </div>
+
+                <div className="hidden xl:block ml-4">
+                    <SimulatorControls />
                 </div>
             </div>
 

@@ -159,6 +159,22 @@ public class ORToolsCpSatOptimizer implements PlanningOptimizer {
                 }
             }
 
+            // M3.16 Partial Replanning: Freeze retained assignments securely
+            if (request.getRetainedAssignments() != null) {
+                request.getRetainedAssignments().stream()
+                        .filter(a -> a.getTaskId().equals(task.getTaskId())
+                                && a.getStatus() == PlanningTaskStatus.SCHEDULED)
+                        .findFirst()
+                        .ifPresent(retained -> {
+                            int rStart = toMinuteOffset(windowStart, retained.getAssignedStart());
+                            int rEnd = toMinuteOffset(windowStart, retained.getAssignedEnd());
+
+                            model.addEquality(startVar, rStart);
+                            model.addEquality(endVar, rEnd);
+                            model.addEquality(scheduledVar, 1); // Force assignment
+                        });
+            }
+
             taskVarsMap.put(task.getTaskId(), new TaskVariables(task, startVar, endVar, scheduledVar));
 
             // Group intervals targeting the specific asset

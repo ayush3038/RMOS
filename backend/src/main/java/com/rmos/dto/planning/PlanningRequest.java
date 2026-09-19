@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
+import com.rmos.dto.planning.PlanAssignment;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PlanningRequest {
@@ -22,6 +24,11 @@ public class PlanningRequest {
 
     @Valid
     private RailwayPlanningContext planningContext;
+
+    // Retained assignments explicitly map hard constraints for partial replanning
+    // where the optimizer is forced to observe existing boundaries
+    @Valid
+    private List<PlanAssignment> retainedAssignments = new ArrayList<>();
 
     @NotNull(message = "Planning window start must not be null")
     private LocalDateTime planningWindowStart;
@@ -67,6 +74,14 @@ public class PlanningRequest {
 
     public void setPlanningWindowEnd(LocalDateTime planningWindowEnd) {
         this.planningWindowEnd = planningWindowEnd;
+    }
+
+    public List<PlanAssignment> getRetainedAssignments() {
+        return retainedAssignments;
+    }
+
+    public void setRetainedAssignments(List<PlanAssignment> retainedAssignments) {
+        this.retainedAssignments = retainedAssignments;
     }
 
     public RailwayPlanningContext getPlanningContext() {

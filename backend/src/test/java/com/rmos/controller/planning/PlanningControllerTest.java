@@ -24,7 +24,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@org.springframework.context.annotation.Import({com.rmos.security.SecurityConfig.class, com.rmos.security.JwtAuthFilter.class, com.rmos.security.CustomAuthenticationEntryPoint.class, com.rmos.security.CustomAccessDeniedHandler.class})
+@org.springframework.context.annotation.Import({ com.rmos.security.SecurityConfig.class,
+        com.rmos.security.JwtAuthFilter.class, com.rmos.security.CustomAuthenticationEntryPoint.class,
+        com.rmos.security.CustomAccessDeniedHandler.class })
 @WebMvcTest(PlanningController.class)
 @org.springframework.security.test.context.support.WithMockUser(roles = "ADMIN")
 class PlanningControllerTest {
@@ -36,6 +38,9 @@ class PlanningControllerTest {
 
     @MockBean
     private PlanningService planningService;
+
+    @MockBean
+    private com.rmos.service.replanning.DynamicReplanningService dynamicReplanningService;
 
     private ObjectMapper objectMapper;
 
@@ -115,8 +120,3 @@ class PlanningControllerTest {
                 .andExpect(jsonPath("$.planningId").value("PLAN-RAIL"));
     }
 }
-
-
-
-
-

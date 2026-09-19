@@ -45,6 +45,12 @@ class RmosApplicationTests {
     @MockBean
     private com.rmos.repository.knowledge.KnowledgeEmbeddingRepository knowledgeEmbeddingRepository;
 
+    @MockBean
+    private com.rmos.repository.planning.PlanningRunRepository planningRunRepository;
+
+    @MockBean
+    private com.rmos.repository.planning.PlanAssignmentRepository planAssignmentRepository;
+
     @Test
     void contextLoads() {
         // Verifies if the Spring application context can start successfully

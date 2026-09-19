@@ -158,6 +158,20 @@ Request:
   "freshness": "FRESH"
 }
 
+Simulation API bounds (Milestone 3.18)
+
+POST /api/v1/simulation/start - Boots active simulator processing tick arrays 
+POST /api/v1/simulation/stop - Halts scheduled simulator execution
+POST /api/v1/simulation/reset - Resets execution back to original seeds
+GET /api/v1/simulation/status - Returns JSON status encompassing sequences tracking deterministic random arrays
+POST /api/v1/simulation/scenario - Accepts payload to set behavior (e.g. TRAIN_DELAY/BLOCK_UNAVAILABLE).
+Request: 
+{
+  "scenario": "TRAIN_DELAY",
+  "seed": 42,
+  "intervalSeconds": 5
+}
+
 API principles
 
 Version APIs under /api/v1.

@@ -13,6 +13,10 @@ import com.rmos.repository.decision.PlanDecisionAuditRepository;
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
 })
 class RmosApplicationTests {
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.rmos.repository.auth.UserRepository userRepository;
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.rmos.repository.auth.SecurityAuditEventRepository securityAuditEventRepository;
 
     // These repository mocks seamlessly satisfy the constructor dependencies of the
     // Service layer
@@ -40,3 +44,5 @@ class RmosApplicationTests {
     }
 
 }
+
+

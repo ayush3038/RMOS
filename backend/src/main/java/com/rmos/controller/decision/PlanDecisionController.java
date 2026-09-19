@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -25,6 +26,7 @@ public class PlanDecisionController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('REVIEWER', 'ADMIN')")
     public ResponseEntity<PlanDecisionResult> createDecision(@Valid @RequestBody PlanReviewRequest request) {
         try {
             PlanDecisionResult result = planDecisionService.processDecision(request);

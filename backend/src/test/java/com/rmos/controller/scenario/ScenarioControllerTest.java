@@ -27,8 +27,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@org.springframework.context.annotation.Import({com.rmos.security.SecurityConfig.class, com.rmos.security.JwtAuthFilter.class, com.rmos.security.CustomAuthenticationEntryPoint.class, com.rmos.security.CustomAccessDeniedHandler.class})
 @WebMvcTest(ScenarioController.class)
+@org.springframework.security.test.context.support.WithMockUser(roles = "ADMIN")
 class ScenarioControllerTest {
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.rmos.security.JwtUtils jwtUtils;
 
     @Autowired
     private MockMvc mockMvc;
@@ -119,3 +123,8 @@ class ScenarioControllerTest {
                 .andExpect(jsonPath("$.bestScenarioId").value("S2"));
     }
 }
+
+
+
+
+

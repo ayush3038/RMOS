@@ -19,11 +19,19 @@ public class SimulationEngine {
 
     private static final Logger logger = LoggerFactory.getLogger(SimulationEngine.class);
 
+    /** Deterministic fallback seed, matching SimulationDataInitializer.DEFAULT_SEED. */
+    private static final long DEFAULT_SEED = 42L;
+
+    /** Key of the singleton simulator state row seeded by SimulationDataInitializer. */
+    public static final String SINGLETON_STATE_ID = "SINGLETON_STATE";
+
     private final SimulationStateRepository stateRepository;
     private final SimulationEventGenerator eventGenerator;
     private final IncidentMappingService mappingService;
 
     private Random deterministicRandom;
+    /** Warn only once per process so a missing row cannot spam the log every 5s. */
+    private volatile boolean missingStateWarned;
 
     @Autowired
     public SimulationEngine(SimulationStateRepository stateRepository,
@@ -37,38 +45,54 @@ public class SimulationEngine {
     }
 
     private void initializeRandomState() {
-        stateRepository.findById("SINGLETON_STATE").ifPresent(state -> {
+        stateRepository.findById(SINGLETON_STATE_ID).ifPresent(state -> {
             if (state.getSeed() != null) {
                 this.deterministicRandom = new Random(state.getSeed());
             } else {
-                this.deterministicRandom = new Random(42L); // Default deterministic bound
+                this.deterministicRandom = new Random(DEFAULT_SEED);
             }
         });
+        if (this.deterministicRandom == null) {
+            this.deterministicRandom = new Random(DEFAULT_SEED);
+        }
     }
 
     @Transactional
     public void processTick() {
-        stateRepository.findById("SINGLETON_STATE").ifPresent(state -> {
-            if (!state.isActive())
-                return;
+        SimulationStateEntity state = stateRepository.findById(SINGLETON_STATE_ID).orElse(null);
 
-            if (this.deterministicRandom == null) {
-                initializeRandomState();
+        if (state == null) {
+            // Previously a silent no-op on every tick, which made a fresh
+            // simulation database look broken with no diagnostic at all.
+            if (!missingStateWarned) {
+                missingStateWarned = true;
+                logger.warn("Simulation state '{}' is missing - the simulator is idle. "
+                        + "Start the backend once so SimulationDataInitializer can seed the baseline row.",
+                        SINGLETON_STATE_ID);
             }
+            return;
+        }
 
-            Long nextSeq = state.getCurrentSequence() + 1;
-            state.setCurrentSequence(nextSeq);
-            state.setLastEventAt(LocalDateTime.now());
+        if (!state.isActive())
+            return;
 
-            IncidentContext event = generateScenarioEvent(state, nextSeq);
-            if (event != null) {
-                // Post into integration bounds directly
-                logger.debug("[SIMULATOR][{}] Emitting event {}", state.getCurrentScenario(), nextSeq);
-                mappingService.mapIncidentToPlanningContext(event);
-            }
+        if (this.deterministicRandom == null) {
+            initializeRandomState();
+        }
 
-            stateRepository.save(state);
-        });
+        Long currentSequence = state.getCurrentSequence() == null ? 0L : state.getCurrentSequence();
+        Long nextSeq = currentSequence + 1;
+        state.setCurrentSequence(nextSeq);
+        state.setLastEventAt(LocalDateTime.now());
+
+        IncidentContext event = generateScenarioEvent(state, nextSeq);
+        if (event != null) {
+            // Post into integration bounds directly
+            logger.debug("[SIMULATOR][{}] Emitting event {}", state.getCurrentScenario(), nextSeq);
+            mappingService.mapIncidentToPlanningContext(event);
+        }
+
+        stateRepository.save(state);
     }
 
     private IncidentContext generateScenarioEvent(SimulationStateEntity state, Long sequence) {

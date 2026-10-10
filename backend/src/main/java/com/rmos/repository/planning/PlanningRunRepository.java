@@ -11,4 +11,6 @@ public interface PlanningRunRepository extends JpaRepository<PlanningRunEntity, 
 
     // Find all versions of a specific plan structure by their ID or parent tree
     List<PlanningRunEntity> findByParentPlanId(String parentPlanId);
+
+    PlanningRunEntity findFirstByOrderByCreatedAtDesc();
 }

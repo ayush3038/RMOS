@@ -42,7 +42,9 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.datasource.password=",
         "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
         "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.flyway.enabled=false"
+        "spring.flyway.enabled=false",
+        "rmos.ai.chat.provider=none",
+        "rmos.ai.nim.enabled=false"
 })
 @ActiveProfiles("test")
 class DynamicReplanningIntegrationTest {

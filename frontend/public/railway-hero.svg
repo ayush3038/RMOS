@@ -1,0 +1,193 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-label="Stylised railway train on track at dusk">
+  <title>RMOS - Railway Maintenance Optimization System</title>
+  <desc>Stylised illustration of a passenger train travelling on railway track with maintenance-of-way elements.</desc>
+
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A1420"/>
+      <stop offset="45%" stop-color="#132A44"/>
+      <stop offset="78%" stop-color="#1F4570"/>
+      <stop offset="100%" stop-color="#2A5C8A"/>
+    </linearGradient>
+    <radialGradient id="haze" cx="0.68" cy="0.62" r="0.55">
+      <stop offset="0%" stop-color="#8FB4D8" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="#5B85AE" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0A1420" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#14243A"/>
+      <stop offset="100%" stop-color="#0A1420"/>
+    </linearGradient>
+    <linearGradient id="trainBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5C7E9E"/>
+      <stop offset="55%" stop-color="#33526F"/>
+      <stop offset="100%" stop-color="#1F3550"/>
+    </linearGradient>
+    <linearGradient id="trainRoof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9DB4C8"/>
+      <stop offset="100%" stop-color="#4E6C88"/>
+    </linearGradient>
+    <linearGradient id="windowGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFE9B8"/>
+      <stop offset="100%" stop-color="#E7B968"/>
+    </linearGradient>
+    <linearGradient id="railSteel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D7E2EC"/>
+      <stop offset="100%" stop-color="#7E93A8"/>
+    </linearGradient>
+    <linearGradient id="hillFar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1B3450"/>
+      <stop offset="100%" stop-color="#132A44"/>
+    </linearGradient>
+    <linearGradient id="vignette" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0A1420" stop-opacity="0.55"/>
+      <stop offset="35%" stop-color="#0A1420" stop-opacity="0.05"/>
+      <stop offset="75%" stop-color="#0A1420" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#0A1420" stop-opacity="0.72"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#haze)"/>
+
+  <!-- Distant hills -->
+  <path d="M0 520 L180 452 L330 508 L520 438 L700 512 L860 462 L1010 516 L1210 456 L1400 514 L1600 470 L1600 620 L0 620 Z" fill="url(#hillFar)" opacity="0.9"/>
+  <path d="M0 566 L210 520 L390 566 L560 516 L760 570 L950 524 L1120 572 L1330 522 L1600 566 L1600 660 L0 660 Z" fill="#101F33" opacity="0.95"/>
+
+  <!-- Ground -->
+  <rect x="0" y="620" width="1600" height="280" fill="url(#ground)"/>
+
+  <!-- Ballast shoulder -->
+  <path d="M0 660 L1600 660 L1600 900 L0 900 Z" fill="#16273C"/>
+  <g fill="#1E3349" opacity="0.85">
+    <circle cx="120" cy="700" r="7"/><circle cx="260" cy="736" r="9"/><circle cx="410" cy="690" r="6"/>
+    <circle cx="560" cy="756" r="11"/><circle cx="700" cy="714" r="8"/><circle cx="860" cy="770" r="12"/>
+    <circle cx="1020" cy="726" r="9"/><circle cx="1180" cy="788" r="13"/><circle cx="1340" cy="742" r="10"/>
+    <circle cx="1490" cy="806" r="14"/><circle cx="330" cy="812" r="12"/><circle cx="940" cy="836" r="14"/>
+  </g>
+
+  <!-- Track: sleepers in perspective -->
+  <g stroke="#23384F" stroke-linecap="round">
+    <line x1="470" y1="676" x2="60"  y2="900" stroke-width="9"/>
+    <line x1="560" y1="676" x2="300" y2="900" stroke-width="9"/>
+    <line x1="650" y1="676" x2="520" y2="900" stroke-width="10"/>
+    <line x1="740" y1="676" x2="700" y2="900" stroke-width="10"/>
+    <line x1="830" y1="676" x2="860" y2="900" stroke-width="10"/>
+    <line x1="920" y1="676" x2="1010" y2="900" stroke-width="11"/>
+    <line x1="1010" y1="676" x2="1150" y2="900" stroke-width="11"/>
+    <line x1="1100" y1="676" x2="1290" y2="900" stroke-width="12"/>
+    <line x1="1190" y1="676" x2="1420" y2="900" stroke-width="12"/>
+    <line x1="1280" y1="676" x2="1540" y2="900" stroke-width="13"/>
+    <line x1="440" y1="712" x2="1350" y2="712" stroke-width="10"/>
+  </g>
+
+  <!-- Rails -->
+  <g stroke="url(#railSteel)" fill="none" stroke-linecap="round">
+    <path d="M498 672 L120 900" stroke-width="7"/>
+    <path d="M752 672 L700 900" stroke-width="9"/>
+    <path d="M962 672 L1140 900" stroke-width="9"/>
+  </g>
+
+  <!-- Catenary masts -->
+  <g stroke="#33526F" stroke-width="5" fill="none" opacity="0.85">
+    <line x1="300" y1="672" x2="300" y2="430"/>
+    <line x1="300" y1="452" x2="760" y2="452"/>
+    <line x1="1060" y1="672" x2="1060" y2="446"/>
+    <line x1="1060" y1="470" x2="1440" y2="470"/>
+    <line x1="300" y1="486" x2="1060" y2="486"/>
+  </g>
+
+  <!-- Signal gantry with aspect lights -->
+  <g>
+    <rect x="1330" y="392" width="9" height="282" fill="#33526F"/>
+    <rect x="1392" y="392" width="9" height="282" fill="#33526F"/>
+    <rect x="1300" y="368" width="130" height="46" rx="6" fill="#16273C" stroke="#3E6183" stroke-width="2"/>
+    <circle cx="1332" cy="391" r="9" fill="#A6332C"/>
+    <circle cx="1365" cy="391" r="9" fill="#C8892B"/>
+    <circle cx="1398" cy="391" r="9" fill="#3FA46A"/>
+  </g>
+
+  <!-- Train: locomotive -->
+  <g>
+    <!-- locomotive body -->
+    <path d="M470 664 L470 452 Q470 424 498 424 L836 424 Q864 424 864 452 L864 664 Z" fill="url(#trainBody)" stroke="#0A1420" stroke-width="3"/>
+    <!-- roof -->
+    <path d="M498 424 L836 424 Q864 424 864 452 L836 452 L498 452 L470 452 Q470 424 498 424 Z" fill="url(#trainRoof)"/>
+    <!-- nose highlight -->
+    <path d="M470 452 L498 452 L498 664 L470 664 Z" fill="#6F92B2" opacity="0.55"/>
+    <!-- accent stripe -->
+    <rect x="470" y="556" width="394" height="14" fill="#C8892B"/>
+    <rect x="470" y="576" width="394" height="6" fill="#A6332C" opacity="0.85"/>
+    <!-- cab window -->
+    <rect x="512" y="470" width="86" height="58" rx="6" fill="url(#windowGlow)"/>
+    <rect x="520" y="478" width="70" height="42" rx="4" fill="#FFF6DF" opacity="0.55"/>
+    <!-- headlight -->
+    <circle cx="488" cy="520" r="13" fill="#FFF3D4"/>
+    <circle cx="488" cy="520" r="22" fill="#FFE9B8" opacity="0.28"/>
+    <!-- vents -->
+    <g fill="#16273C" opacity="0.75">
+      <rect x="640" y="480" width="180" height="7" rx="3"/>
+      <rect x="640" y="494" width="180" height="7" rx="3"/>
+      <rect x="640" y="508" width="120" height="7" rx="3"/>
+    </g>
+    <!-- number plate -->
+    <rect x="760" y="596" width="88" height="26" rx="4" fill="#0E1E30" stroke="#4E6C88" stroke-width="1.5"/>
+    <text x="804" y="615" font-family="monospace" font-size="16" fill="#D7E2EC" text-anchor="middle">RMOS-01</text>
+    <!-- bogies -->
+    <g fill="#0E1E30">
+      <rect x="500" y="660" width="74" height="34" rx="8"/>
+      <rect x="606" y="660" width="74" height="34" rx="8"/>
+    </g>
+    <g fill="#7E93A8">
+      <circle cx="522" cy="694" r="11"/><circle cx="552" cy="694" r="11"/>
+      <circle cx="628" cy="694" r="11"/><circle cx="658" cy="694" r="11"/>
+    </g>
+  </g>
+
+  <!-- Carriages -->
+  <g>
+    <!-- carriage 1 -->
+    <path d="M884 664 L884 448 Q884 428 904 428 L1104 428 Q1124 428 1124 448 L1124 664 Z" fill="url(#trainBody)" stroke="#0A1420" stroke-width="3"/>
+    <rect x="884" y="548" width="240" height="11" fill="#C8892B"/>
+    <g fill="url(#windowGlow)">
+      <rect x="912" y="468" width="42" height="34" rx="4"/>
+      <rect x="966" y="468" width="42" height="34" rx="4"/>
+      <rect x="1020" y="468" width="42" height="34" rx="4"/>
+      <rect x="1074" y="468" width="24" height="34" rx="4"/>
+    </g>
+    <rect x="884" y="664" width="240" height="22" fill="#1F3550"/>
+    <g fill="#0E1E30"><rect x="912" y="660" width="58" height="30" rx="7"/><rect x="1030" y="660" width="58" height="30" rx="7"/></g>
+    <g fill="#7E93A8"><circle cx="928" cy="690" r="9"/><circle cx="952" cy="690" r="9"/><circle cx="1046" cy="690" r="9"/><circle cx="1070" cy="690" r="9"/></g>
+  </g>
+  <g>
+    <!-- carriage 2 -->
+    <path d="M1144 664 L1144 448 Q1144 428 1164 428 L1364 428 Q1384 428 1384 448 L1384 664 Z" fill="url(#trainBody)" stroke="#0A1420" stroke-width="3"/>
+    <rect x="1144" y="548" width="240" height="11" fill="#C8892B"/>
+    <g fill="url(#windowGlow)">
+      <rect x="1172" y="468" width="42" height="34" rx="4"/>
+      <rect x="1226" y="468" width="42" height="34" rx="4"/>
+      <rect x="1280" y="468" width="42" height="34" rx="4"/>
+      <rect x="1334" y="468" width="24" height="34" rx="4"/>
+    </g>
+    <rect x="1144" y="664" width="240" height="22" fill="#1F3550"/>
+    <g fill="#0E1E30"><rect x="1172" y="660" width="58" height="30" rx="7"/><rect x="1290" y="660" width="58" height="30" rx="7"/></g>
+    <g fill="#7E93A8"><circle cx="1188" cy="690" r="9"/><circle cx="1212" cy="690" r="9"/><circle cx="1306" cy="690" r="9"/><circle cx="1330" cy="690" r="9"/></g>
+  </g>
+
+  <!-- Couplings -->
+  <g fill="#0E1E30">
+    <rect x="856" y="616" width="30" height="14" rx="5"/>
+    <rect x="1116" y="616" width="30" height="14" rx="5"/>
+  </g>
+
+  <!-- Maintenance-of-way detail: measurement markers -->
+  <g stroke="#7FB0D6" stroke-width="3" opacity="0.75">
+    <line x1="215" y1="806" x2="215" y2="742"/>
+    <line x1="196" y1="752" x2="234" y2="752"/>
+    <line x1="205" y1="790" x2="225" y2="790"/>
+  </g>
+
+  <!-- Vignette -->
+  <rect width="1600" height="900" fill="url(#vignette)"/>
+</svg>

@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.slf4j.Logger;
@@ -12,9 +13,19 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Component
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(RateLimitingFilter.class);
+
+    @Value("${rmos.rate-limit.enabled:true}")
+    private boolean enabled;
+
+    @Value("${rmos.rate-limit.max-requests:10}")
+    private int maxRequests;
+
+    @Value("${rmos.rate-limit.time-window-ms:10000}")
+    private long timeWindowMs;
 
     // Track requests per IPs in memory
     private final ConcurrentHashMap<String, RequestData> requestCounts = new ConcurrentHashMap<>();
@@ -29,23 +40,25 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
     }
 
-    // Limit: Max 10 requests per 10 seconds for sensitive endpoints
-    private static final int MAX_REQUESTS = 10;
-    private static final long TIME_WINDOW_MS = 10000;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        if (!enabled) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String path = request.getRequestURI();
 
-        // Only apply to auth or expensive planning endpoints
-        if (path.startsWith("/api/v1/auth") || path.startsWith("/api/v1/plans")) {
+        // Only apply to auth, expensive planning, or LLM chat endpoints
+        if (path.startsWith("/api/v1/auth") || path.startsWith("/api/v1/plans")
+                || path.startsWith("/api/v1/chat")) {
             String clientIp = request.getRemoteAddr();
             long currentTime = System.currentTimeMillis();
 
             requestCounts.compute(clientIp, (key, data) -> {
-                if (data == null || (currentTime - data.timestamp) > TIME_WINDOW_MS) {
+                if (data == null || (currentTime - data.timestamp) > timeWindowMs) {
                     return new RequestData(1, currentTime);
                 } else {
                     data.count++;
@@ -54,7 +67,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             });
 
             RequestData data = requestCounts.get(clientIp);
-            if (data.count > MAX_REQUESTS) {
+            if (data.count > maxRequests) {
                 logger.warn("Rate limit exceeded for IP: {} on path: {}", clientIp, path);
                 response.setStatus(429); // Too Many Requests
                 response.setContentType("application/json");

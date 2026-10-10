@@ -1,93 +1,56 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { KpiStrip, type KpiItem } from "@/components/rmos/KpiStrip";
 import { useData } from "@/hooks/useData";
 import { getRepository } from "@/services/api";
 import {
     AlertTriangle,
+    ActivitySquare,
+    BarChart3,
     CalendarClock,
     CalendarRange,
+    CheckCircle2,
     ShieldAlert,
-    ActivitySquare,
-    BarChart3
+    Timer,
+    Train,
+    Users
 } from "lucide-react";
 
 export function DashboardKpis() {
     const { data: kpis, isLoading, error } = useData(() => getRepository().getDashboardKpis());
 
     if (isLoading) {
-        return <div className="text-sm text-slate-500 py-4 text-center w-full">Loading KPIs...</div>;
+        return (
+            <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-5">
+                {Array.from({ length: 10 }).map((_, index) => (
+                    <div key={index} className="h-[86px] animate-pulse rounded-md border bg-slate-100" />
+                ))}
+            </div>
+        );
     }
 
     if (error || !kpis) {
-        return <div className="text-sm text-red-500 py-4 text-center w-full">Failed to load KPIs.</div>;
+        return (
+            <div className="text-sm text-red-500 py-3 text-center w-full rounded-md border border-red-line bg-red-bg">
+                Failed to load KPIs.
+            </div>
+        );
     }
 
+    const items: KpiItem[] = [
+        { label: "Critical Tasks", value: kpis.criticalMaintenance, hint: "Pending high-risk work", icon: AlertTriangle, tone: "red" },
+        { label: "Overdue Tasks", value: kpis.overdueTasks, hint: "Require immediate action", icon: CalendarClock, tone: kpis.overdueTasks ? "amber" : "green" },
+        { label: "Available Blocks", value: kpis.availableBlockWindows, hint: "Next 24 hours", icon: CalendarRange, tone: "blue" },
+        { label: "Active Conflicts", value: kpis.activeConflicts, hint: "Unresolved schedule clashes", icon: ShieldAlert, tone: kpis.activeConflicts ? "red" : "green" },
+        { label: "Asset Availability", value: `${kpis.assetAvailabilityPercent}%`, hint: "Network wide average", icon: ActivitySquare, tone: "green" },
+        { label: "Block Utilization", value: `${kpis.blockUtilizationPercent}%`, hint: "Of granted windows", icon: BarChart3 },
+        { label: "Trains Running", value: kpis.trainsRunning, hint: "Services on the board", icon: Train, tone: "blue" },
+        { label: "On-time Rate", value: `${kpis.onTimePercent}%`, hint: "Without recorded delay", icon: Timer, tone: kpis.onTimePercent >= 85 ? "green" : "amber" },
+        { label: "Completed Today", value: kpis.tasksCompletedToday, hint: "Tasks closed this run", icon: CheckCircle2, tone: "green" },
+        { label: "Open Approvals", value: kpis.openApprovalRequests, hint: "Awaiting department review", icon: Users, tone: kpis.openApprovalRequests ? "amber" : "green" }
+    ];
+
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6 mb-6">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Critical Tasks</CardTitle>
-                    <AlertTriangle className="h-4 w-4 text-destructive" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold font-mono">{kpis.criticalMaintenance}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Pending maintenance</p>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Overdue Tasks</CardTitle>
-                    <CalendarClock className="h-4 w-4 text-amber-500" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold font-mono text-amber-500">{kpis.overdueTasks}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Require immediate action</p>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Available Blocks</CardTitle>
-                    <CalendarRange className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold font-mono">{kpis.availableBlockWindows}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Next 24 hours</p>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Conflicts</CardTitle>
-                    <ShieldAlert className="h-4 w-4 text-destructive" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold font-mono text-destructive">{kpis.activeConflicts}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Unresolved schedule clashes</p>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Asset Availability</CardTitle>
-                    <ActivitySquare className="h-4 w-4 text-green-600" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold font-mono text-green-600">{kpis.assetAvailabilityPercent}%</div>
-                    <p className="text-xs text-muted-foreground mt-1">Network wide average</p>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Block Utilization</CardTitle>
-                    <BarChart3 className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold font-mono">{kpis.blockUtilizationPercent}%</div>
-                    <p className="text-xs text-muted-foreground mt-1">Of granted windows</p>
-                </CardContent>
-            </Card>
+        <div>
+            <KpiStrip items={items} className="xl:grid-cols-5" />
         </div>
     );
 }

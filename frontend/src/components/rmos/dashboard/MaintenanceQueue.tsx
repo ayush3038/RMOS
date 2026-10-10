@@ -20,7 +20,7 @@ export function MaintenanceQueue() {
     const [selectedTask, setSelectedTask] = useState<MaintenanceTask | null>(null);
 
     return (
-        <Card className="col-span-full h-full">
+        <Card className="col-span-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <ListTodo className="h-5 w-5 text-primary" />
@@ -47,17 +47,17 @@ export function MaintenanceQueue() {
                         <TableBody>
                             {isLoading && (
                                 <TableRow>
-                                    <TableCell colSpan={9} className="h-24 text-center text-slate-500">Loading tasks...</TableCell>
+                                    <TableCell colSpan={9} className="h-16 text-center text-slate-500">Loading tasks...</TableCell>
                                 </TableRow>
                             )}
                             {error && (
                                 <TableRow>
-                                    <TableCell colSpan={9} className="h-24 text-center text-red-500">Failed to load tasks</TableCell>
+                                    <TableCell colSpan={9} className="h-16 text-center text-red-500">Failed to load tasks</TableCell>
                                 </TableRow>
                             )}
                             {!isLoading && !error && (!tasks || tasks.length === 0) && (
                                 <TableRow>
-                                    <TableCell colSpan={9} className="h-24 text-center text-slate-500">No maintenance tasks.</TableCell>
+                                    <TableCell colSpan={9} className="h-16 text-center text-slate-500">No maintenance tasks.</TableCell>
                                 </TableRow>
                             )}
                             {!isLoading && !error && tasks && tasks.map((task) => (

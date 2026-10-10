@@ -8,7 +8,7 @@ export function CorridorOverview() {
     const { data: sections, isLoading, error } = useData(() => getRepository().getCorridorSections());
 
     return (
-        <Card className="h-full">
+        <Card>
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
@@ -21,13 +21,13 @@ export function CorridorOverview() {
                 </div>
             </CardHeader>
             <CardContent>
-                {isLoading && <div className="text-sm text-slate-500 py-4 text-center">Loading corridors...</div>}
-                {error && <div className="text-sm text-red-500 py-4 text-center">Failed to load corridors</div>}
+                {isLoading && <div className="text-sm text-slate-500 py-3 text-center">Loading corridors...</div>}
+                {error && <div className="text-sm text-red-500 py-3 text-center">Failed to load corridors</div>}
                 {!isLoading && !error && (!sections || sections.length === 0) && (
-                    <div className="text-sm text-slate-500 py-4 text-center">No corridor data available.</div>
+                    <div className="text-sm text-slate-500 py-3 text-center">No corridor data available.</div>
                 )}
                 {!isLoading && !error && sections && (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {sections.map((section) => (
                             <div key={section.id} className="flex items-center gap-4 p-3 border rounded-lg bg-slate-50/50">
                                 <div className="w-24 font-medium text-sm">
@@ -68,7 +68,7 @@ export function CorridorOverview() {
                     </div>
                 )}
 
-                <div className="flex items-center gap-4 mt-6 text-xs text-muted-foreground justify-end">
+                <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground justify-end">
                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500" /> Available</div>
                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500" /> Maintenance</div>
                     <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500" /> Restricted</div>

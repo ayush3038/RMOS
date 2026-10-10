@@ -6,6 +6,8 @@ import com.rmos.service.auth.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,13 +22,15 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest) {
-        LoginResponse response = authService.login(loginRequest);
-        if (response != null) {
+        try {
+            LoginResponse response = authService.login(loginRequest);
             return ResponseEntity.ok(response);
-        } else {
-            // Need a structured error layout based on PRD Error Handling
+        } catch (BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse(401, "UNAUTHORIZED", "Invalid username or password"));
+        } catch (DisabledException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse(401, "UNAUTHORIZED", "Account is inactive"));
         }
     }
 

@@ -13,8 +13,8 @@ export function ConflictPanel() {
     const { data: conflicts, isLoading, error } = useData(() => getRepository().getConflicts());
 
     return (
-        <Card className="h-full border-red-100">
-            <CardHeader className="bg-red-50/50 pb-4">
+        <Card className="border-red-100">
+            <CardHeader className="bg-red-50/50 pb-3">
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2 text-red-700">
@@ -25,14 +25,14 @@ export function ConflictPanel() {
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="pt-4">
-                {isLoading && <div className="text-sm text-slate-500 py-4 text-center">Loading conflicts...</div>}
-                {error && <div className="text-sm text-red-500 py-4 text-center">Failed to load conflicts</div>}
+            <CardContent>
+                {isLoading && <div className="text-sm text-slate-500 py-3 text-center">Loading conflicts...</div>}
+                {error && <div className="text-sm text-red-500 py-3 text-center">Failed to load conflicts</div>}
                 {!isLoading && !error && (!conflicts || conflicts.length === 0) && (
-                    <div className="text-sm text-emerald-600 py-4 text-center">No active conflicts detected.</div>
+                    <div className="text-sm text-emerald-600 py-3 text-center">No active conflicts detected.</div>
                 )}
                 {!isLoading && !error && conflicts && conflicts.length > 0 && (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {conflicts.map((conflict) => (
                             <div key={conflict.id} className="p-3 border border-red-100 rounded-lg bg-white shadow-sm space-y-2">
                                 <div className="flex items-start justify-between">

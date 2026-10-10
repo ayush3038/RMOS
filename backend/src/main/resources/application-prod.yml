@@ -10,6 +10,18 @@ spring:
 rmos:
   cors:
     allowed-origins: ${RMOS_CORS_ALLOWED_ORIGINS:https://yourproductionfrontenddomain.com}
+  # Production (Render): Gemini is the intended hosted AI provider. Ollama is not
+  # reachable from Render and must never be selected here; no paid fallback.
+  ai:
+    chat:
+      provider: ${RMOS_AI_CHAT_PROVIDER:gemini}
+    gemini:
+      # Set GEMINI_API_KEY in the Render dashboard (never in git).
+      api-key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-3.1-flash-lite}
+    nim:
+      # NVIDIA NIM stays disabled until the NVIDIA account is verified.
+      enabled: ${RMOS_NIM_ENABLED:false}
 
 management:
   endpoints:

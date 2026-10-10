@@ -23,8 +23,8 @@ export function ActivityFeed() {
     };
 
     return (
-        <Card className="h-full">
-            <CardHeader className="pb-4">
+        <Card>
+            <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
@@ -36,15 +36,15 @@ export function ActivityFeed() {
                 </div>
             </CardHeader>
             <CardContent>
-                {isLoading && <div className="text-sm text-slate-500 py-4 text-center">Loading activity...</div>}
-                {error && <div className="text-sm text-red-500 py-4 text-center">Failed to load activity</div>}
+                {isLoading && <div className="text-sm text-slate-500 py-3 text-center">Loading activity...</div>}
+                {error && <div className="text-sm text-red-500 py-3 text-center">Failed to load activity</div>}
                 {!isLoading && !error && (!events || events.length === 0) && (
-                    <div className="text-sm text-slate-500 py-4 text-center">No recent activity.</div>
+                    <div className="text-sm text-slate-500 py-3 text-center">No recent activity.</div>
                 )}
                 {!isLoading && !error && events && (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {events.map((event) => (
-                            <div key={event.id} className="flex gap-3 relative pb-4 last:pb-0">
+                            <div key={event.id} className="flex gap-3 relative pb-3 last:pb-0">
                                 <div className="mt-0.5 shrink-0 bg-slate-100 p-1.5 rounded-full z-10 border border-white">
                                     {getEventIcon(event.type)}
                                 </div>

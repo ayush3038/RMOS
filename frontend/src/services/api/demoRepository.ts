@@ -1,11 +1,15 @@
 import type { DataRepository } from "./repository";
 import type {
+    Asset,
+    BlockWindow,
     DashboardKpis,
     CorridorSection,
     MaintenanceTask,
     DepartmentRequest,
     Conflict,
-    OperationalEvent
+    OperationalEvent,
+    ReportItem,
+    Train
 } from "@/types/models";
 import {
     DEMO_KPIS,
@@ -13,46 +17,60 @@ import {
     DEMO_TASKS,
     DEMO_DEPARTMENT_REQUESTS,
     DEMO_CONFLICTS,
-    DEMO_EVENTS
+    DEMO_EVENTS,
+    DEMO_TRAINS,
+    DEMO_BLOCK_WINDOWS,
+    DEMO_ASSETS,
+    DEMO_REPORTS
 } from "@/data/demo/mockData";
 
 /**
  * Returns mock data wrapped in promises to simulate network requests.
+ * The artificial latency keeps loading states visible during demonstration.
  */
+const respond = <T>(payload: T, latencyMs = 300): Promise<T> =>
+    new Promise((resolve) => {
+        setTimeout(() => resolve(payload), latencyMs);
+    });
+
 export class DemoDataRepository implements DataRepository {
     async getDashboardKpis(): Promise<DashboardKpis> {
-        return new Promise((resolve) => {
-            setTimeout(() => resolve(DEMO_KPIS), 300);
-        });
+        return respond(DEMO_KPIS);
     }
 
     async getCorridorSections(): Promise<CorridorSection[]> {
-        return new Promise((resolve) => {
-            setTimeout(() => resolve(DEMO_SECTIONS), 300);
-        });
+        return respond(DEMO_SECTIONS);
     }
 
     async getMaintenanceTasks(): Promise<MaintenanceTask[]> {
-        return new Promise((resolve) => {
-            setTimeout(() => resolve(DEMO_TASKS), 300);
-        });
+        return respond(DEMO_TASKS);
     }
 
     async getDepartmentRequests(): Promise<DepartmentRequest[]> {
-        return new Promise((resolve) => {
-            setTimeout(() => resolve(DEMO_DEPARTMENT_REQUESTS), 300);
-        });
+        return respond(DEMO_DEPARTMENT_REQUESTS);
     }
 
     async getConflicts(): Promise<Conflict[]> {
-        return new Promise((resolve) => {
-            setTimeout(() => resolve(DEMO_CONFLICTS), 300);
-        });
+        return respond(DEMO_CONFLICTS);
     }
 
     async getRecentEvents(): Promise<OperationalEvent[]> {
-        return new Promise((resolve) => {
-            setTimeout(() => resolve(DEMO_EVENTS), 300);
-        });
+        return respond(DEMO_EVENTS);
+    }
+
+    async getTrains(): Promise<Train[]> {
+        return respond(DEMO_TRAINS);
+    }
+
+    async getBlockWindows(): Promise<BlockWindow[]> {
+        return respond(DEMO_BLOCK_WINDOWS);
+    }
+
+    async getAssets(): Promise<Asset[]> {
+        return respond(DEMO_ASSETS);
+    }
+
+    async getReports(): Promise<ReportItem[]> {
+        return respond(DEMO_REPORTS);
     }
 }

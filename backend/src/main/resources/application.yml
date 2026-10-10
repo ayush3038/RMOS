@@ -38,13 +38,77 @@ rmos:
   integration:
     data-freshness:
       threshold-minutes: 60
+  demo:
+    # Demo account credentials (intentionally public for demo environment)
+    # Override via environment variables in production:
+    # RMOS_DEMO_USERNAME, RMOS_DEMO_PASSWORD, RMOS_DEMO_ROLE, RMOS_DEMO_ENABLED
+    username: ${RMOS_DEMO_USERNAME:admin}
+    password: ${RMOS_DEMO_PASSWORD:demo123}
+    role: ${RMOS_DEMO_ROLE:ADMIN}
+    enabled: ${RMOS_DEMO_ENABLED:true}
+    # Development-only repair of the demo account when a pre-existing local
+    # database holds a stale admin hash / deactivated account. Hard-disabled
+    # under the prod profile. Never touches non-demo users.
+    repair-password: ${RMOS_DEMO_REPAIR_PASSWORD:false}
+    simulation:
+      # Baseline simulation-data seeding. Creates the SINGLETON_STATE simulator
+      # row exactly once so the scheduler is not a silent no-op on a fresh
+      # database. Never runs under the prod profile.
+      enabled: ${RMOS_DEMO_SIMULATION_ENABLED:true}
+      interval-seconds: ${SIMULATION_INTERVAL_SEC:8}
   ai:
+    gemini:
+      # Google Gemini (Generative Language API) - recommended hosted provider.
+      # Get a key from https://aistudio.google.com/apikey (free tier).
+      # Base URL and API version are Google's documented public endpoint.
+      base-url: ${RMOS_GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+      api-version: ${RMOS_GEMINI_API_VERSION:v1beta}
+      # Stable free-tier model. RMOS never enables billing and never
+      # falls back to a paid provider or model.
+      model: ${GEMINI_MODEL:gemini-3.1-flash-lite}
+      api-key: ${GEMINI_API_KEY:}
+      timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:45}
     nim:
-      base-url: ${RMOS_NIM_BASE_URL:http://localhost:8000}
-      model: ${RMOS_NIM_MODEL:}
+      # NVIDIA NIM hosted API endpoint (free tier via NVIDIA Developer Program)
+      # Base URL for NVIDIA's hosted API: https://integrate.api.nvidia.com/v1
+      # Requires API key from build.nvidia.com (free for development/testing/evaluation)
+      base-url: ${RMOS_NIM_BASE_URL:https://integrate.api.nvidia.com/v1}
+      # Model available through free hosted endpoint (verify at build.nvidia.com)
+      model: ${RMOS_NIM_MODEL:meta/llama-3.1-8b-instruct}
       api-key: ${RMOS_NIM_API_KEY:}
       timeout-seconds: 30
-      enabled: false
+      enabled: ${RMOS_NIM_ENABLED:true}
+    chat:
+      # Comma-separated provider preference chain, tried left to right.
+      # "gemini" = Google Gemini free tier (hosted, PRIMARY - set GEMINI_API_KEY)
+      # "ollama" = free local open-source models via Ollama (localhost only)
+      # "nim"    = NVIDIA NIM (only usable once the NVIDIA account is verified)
+      # "none" disables chat.
+      # Gemini-only by default so a missing key is reported honestly rather than
+      # silently answered by a local fallback. Use "gemini,ollama" to opt into the
+      # local fallback explicitly.
+      provider: ${RMOS_AI_CHAT_PROVIDER:gemini}
+      model: ${RMOS_AI_CHAT_MODEL:}
+      api-key: ${RMOS_AI_CHAT_API_KEY:}
+      timeout-seconds: ${RMOS_AI_CHAT_TIMEOUT_SECONDS:45}
+      max-input-chars: ${RMOS_AI_CHAT_MAX_INPUT_CHARS:4000}
+      max-history-messages: ${RMOS_AI_CHAT_MAX_HISTORY_MESSAGES:12}
+      top-k: ${RMOS_AI_CHAT_TOP_K:5}
+      temperature: ${RMOS_AI_CHAT_TEMPERATURE:0.2}
+      nim:
+        # Falls back to rmos.ai.nim.base-url / rmos.ai.nim.model when empty.
+        base-url: ${RMOS_AI_CHAT_NIM_BASE_URL:}
+        model: ${RMOS_AI_CHAT_NIM_MODEL:}
+      gemini:
+        # Falls back to rmos.ai.gemini.* (GEMINI_API_KEY / GEMINI_MODEL) when empty.
+        base-url: ${RMOS_AI_CHAT_GEMINI_BASE_URL:}
+        model: ${RMOS_AI_CHAT_GEMINI_MODEL:}
+        api-key: ${RMOS_AI_CHAT_GEMINI_API_KEY:}
+      ollama:
+        # Local development only: http://localhost:11434 and llama3.2
+        # NOT configured for Render deployment (unreachable from cloud)
+        base-url: ${RMOS_AI_CHAT_OLLAMA_BASE_URL:http://localhost:11434}
+        model: ${RMOS_AI_CHAT_OLLAMA_MODEL:llama3.2}
   priority:
     weights:
       safety: 0.30

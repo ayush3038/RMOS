@@ -67,7 +67,11 @@ public class EmbeddingService {
             );
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-            ResponseEntity<Map> response = restTemplate.postForEntity(nimBaseUrl + "/embeddings", request, Map.class);
+            String base = nimBaseUrl.replaceAll("/+$", "");
+            // Hosted NIM is documented as https://integrate.api.nvidia.com/v1;
+            // local NIM containers serve /v1/embeddings as well.
+            String embeddingsUrl = base.endsWith("/v1") ? base + "/embeddings" : base + "/v1/embeddings";
+            ResponseEntity<Map> response = restTemplate.postForEntity(embeddingsUrl, request, Map.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 // OpenAI payload standard extracts float arrays from `data[0].embedding`

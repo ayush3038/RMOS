@@ -53,6 +53,18 @@ buildNumber.properties
 *.pem
 *.key
 
+# Local secret files - never commit real AI provider credentials
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+secrets/
+secrets.*
+
 # Logs
 logs/
 *.log

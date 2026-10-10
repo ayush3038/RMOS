@@ -25,7 +25,7 @@ public class KnowledgeController {
     }
 
     @PostMapping("/search")
-    @PreAuthorize("hasAnyAuthority('VIEWER', 'PLANNER', 'REVIEWER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('VIEWER', 'PLANNER', 'REVIEWER', 'ADMIN')")
     public ResponseEntity<KnowledgeSearchResponse> search(@RequestBody KnowledgeSearchRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -33,8 +33,8 @@ public class KnowledgeController {
         // scope natively.
         List<String> allowedScopes = List.of("PUBLIC", "INTERNAL");
 
-        if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ADMIN")
-                || a.getAuthority().equals("REVIEWER") || a.getAuthority().equals("PLANNER"))) {
+        if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
+                || a.getAuthority().equals("ROLE_REVIEWER") || a.getAuthority().equals("ROLE_PLANNER"))) {
             allowedScopes = List.of("PUBLIC", "INTERNAL", "CONFIDENTIAL"); // Or appropriate logic
         }
 

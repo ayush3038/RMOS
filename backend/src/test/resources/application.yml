@@ -1,3 +1,26 @@
 jwt:
   secret: testsecretkeythatisatleast32byteslong1234567890
   expirationSec: 3600
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password: 
+
+rmos:
+  demo:
+    enabled: true
+  ai:
+    chat:
+      provider: none
+    nim:
+      enabled: false
+  rate-limit:
+    enabled: false

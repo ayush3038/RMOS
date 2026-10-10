@@ -56,7 +56,10 @@ public class NvidiaNimExplanationModel implements ExplanationModel {
         }
 
         HttpEntity<String> entity = new HttpEntity<>(jsonPayload, headers);
-        String url = nimProperties.getBaseUrl().replaceAll("/+$", "") + "/v1/chat/completions";
+        String base = nimProperties.getBaseUrl().replaceAll("/+$", "");
+        // Tolerate base URLs with or without the /v1 suffix (hosted NIM is
+        // documented as https://integrate.api.nvidia.com/v1).
+        String url = base.endsWith("/v1") ? base + "/chat/completions" : base + "/v1/chat/completions";
 
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);

@@ -1,0 +1,8 @@
+# Cloudflare Pages SPA fallback.
+# Every client-side route (/, /login, /dashboard, /trains, ...) is served by the
+# React router, so a direct visit or a browser refresh must resolve to
+# index.html instead of returning a 404. Cloudflare Pages matches real static
+# assets first, so this rule only catches application routes.
+# No secret is ever placed in a Cloudflare environment variable - AI provider
+# credentials (GEMINI_API_KEY) belong to the Render backend only.
+/*    /index.html   200

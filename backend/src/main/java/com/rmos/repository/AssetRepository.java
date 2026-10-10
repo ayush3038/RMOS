@@ -6,4 +6,6 @@ import com.rmos.domain.Asset;
 
 @Repository
 public interface AssetRepository extends JpaRepository<Asset, Long> {
+
+    long countByActive(boolean active);
 }

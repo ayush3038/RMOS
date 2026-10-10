@@ -1,10 +1,14 @@
 import type {
+    Asset,
+    BlockWindow,
     DashboardKpis,
     CorridorSection,
     MaintenanceTask,
     DepartmentRequest,
     Conflict,
-    OperationalEvent
+    OperationalEvent,
+    ReportItem,
+    Train
 } from "@/types/models";
 
 export interface DataRepository {
@@ -14,4 +18,8 @@ export interface DataRepository {
     getDepartmentRequests(): Promise<DepartmentRequest[]>;
     getConflicts(): Promise<Conflict[]>;
     getRecentEvents(): Promise<OperationalEvent[]>;
+    getTrains(): Promise<Train[]>;
+    getBlockWindows(): Promise<BlockWindow[]>;
+    getAssets(): Promise<Asset[]>;
+    getReports(): Promise<ReportItem[]>;
 }

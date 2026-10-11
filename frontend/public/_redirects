@@ -1,8 +1,13 @@
 # Cloudflare Pages SPA fallback.
-# Every client-side route (/, /login, /dashboard, /trains, ...) is served by the
-# React router, so a direct visit or a browser refresh must resolve to
-# index.html instead of returning a 404. Cloudflare Pages matches real static
-# assets first, so this rule only catches application routes.
+# Cloudflare Pages renders single-page applications natively: when the build
+# output contains no top-level 404.html (this project has none), any path that
+# does not match a static asset (/, /login, /dashboard, /trains, /analytics, ...)
+# is served index.html with a 200, so React Router handles the route on a direct
+# visit or a browser refresh. Real static assets are always matched first.
+#
+# Do NOT add a catch-all rule such as `/* /index.html 200` here: Cloudflare
+# rejects it with "Infinite loop detected in this rule" (code 100324), because
+# the destination /index.html is normalized (strip .html, then /index -> /) back
+# into a path that `/*` itself matches, which re-triggers the rule forever.
 # No secret is ever placed in a Cloudflare environment variable - AI provider
 # credentials (GEMINI_API_KEY) belong to the Render backend only.
-/*    /index.html   200

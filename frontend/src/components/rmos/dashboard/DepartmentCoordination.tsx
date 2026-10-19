@@ -151,29 +151,29 @@ export function DepartmentCoordination({ onNavigate }: DepartmentCoordinationPro
                             return (
                                 <div
                                     key={req.id}
-                                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-md bg-white text-sm shadow-sm gap-2"
+                                    className="flex flex-col p-3 border rounded-md bg-white text-sm shadow-sm gap-2 min-w-0"
                                 >
                                     {onNavigate ? (
                                         <button
                                             type="button"
                                             onClick={() => onNavigate("departments", req.id)}
                                             title="Open request details"
-                                            className="flex-1 min-w-[120px] text-left cursor-pointer rounded transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                                            className="w-full min-w-0 text-left cursor-pointer rounded transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
                                         >
                                             {info}
                                         </button>
                                     ) : (
-                                        <div className="flex-1 min-w-[120px]">{info}</div>
+                                        <div className="min-w-0">{info}</div>
                                     )}
 
-                                    <div className="flex items-center gap-2 shrink-0">
+                                    <div className="flex flex-wrap items-center justify-end gap-2 min-w-0">
                                     <div className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-slate-700 font-mono text-xs">
                                         <Clock className="h-3 w-3" />
                                         {req.requestedWindowStart} – {req.requestedWindowEnd}
                                     </div>
 
                                     {req.status === "proposed" && (
-                                        <div className="flex gap-1.5 max-w-xs">
+                                        <div className="flex gap-1.5 max-w-full">
                                             <button
                                                 type="button"
                                                 onClick={() => review(req, "approved")}

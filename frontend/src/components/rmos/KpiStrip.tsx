@@ -9,6 +9,9 @@ export interface KpiItem {
     hint?: string;
     tone?: KpiTone;
     icon?: ComponentType<{ className?: string }>;
+    /** Module id this metric summarises. When set (and the strip receives an
+     * `onNavigate`), the card becomes a clickable button that opens that module. */
+    page?: string;
 }
 
 const TONE_CLASSES: Record<KpiTone, string> = {
@@ -30,10 +33,20 @@ const ICON_TONES: Record<KpiTone, string> = {
 interface KpiStripProps {
     items: KpiItem[];
     className?: string;
+    /** When provided, items carrying a `page` render as clickable cards that
+     * navigate to that module. Items without a `page` stay plain cards. */
+    onNavigate?: (page: string) => void;
 }
 
+const CARD_BASE_CLASS =
+    "border rounded-md bg-surface px-3.5 py-3 flex flex-col justify-between min-h-[86px]";
+
+/** Extra affordances for clickable cards (pointer, hover, visible focus ring). */
+const CARD_INTERACTIVE_CLASS =
+    "cursor-pointer text-left transition-colors hover:bg-slate-50/70 hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60";
+
 /** Dense metric strip used at the top of every module page. */
-export function KpiStrip({ items, className }: KpiStripProps) {
+export function KpiStrip({ items, className, onNavigate }: KpiStripProps) {
     return (
         <div
             className={cn(
@@ -44,11 +57,8 @@ export function KpiStrip({ items, className }: KpiStripProps) {
             {items.map((item, index) => {
                 const Icon = item.icon;
                 const tone = item.tone ?? "default";
-                return (
-                    <div
-                        key={`${item.label}-${index}`}
-                        className="border rounded-md bg-surface px-3.5 py-3 flex flex-col justify-between min-h-[86px]"
-                    >
+                const content = (
+                    <>
                         <div className="flex items-start justify-between gap-2">
                             <span className="text-[11.5px] font-semibold uppercase tracking-[0.4px] text-muted leading-tight">
                                 {item.label}
@@ -70,6 +80,30 @@ export function KpiStrip({ items, className }: KpiStripProps) {
                                 </div>
                             )}
                         </div>
+                    </>
+                );
+
+                // Only items with a meaningful destination become buttons;
+                // everything else keeps the original non-interactive card.
+                if (item.page && onNavigate) {
+                    return (
+                        <button
+                            key={`${item.label}-${index}`}
+                            type="button"
+                            onClick={() => onNavigate(item.page as string)}
+                            className={cn(CARD_BASE_CLASS, CARD_INTERACTIVE_CLASS)}
+                        >
+                            {content}
+                        </button>
+                    );
+                }
+
+                return (
+                    <div
+                        key={`${item.label}-${index}`}
+                        className={CARD_BASE_CLASS}
+                    >
+                        {content}
                     </div>
                 );
             })}

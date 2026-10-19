@@ -10,7 +10,13 @@ import { requestStatusChip } from "@/lib/status";
 import { useToast } from "@/store/toast";
 import type { DepartmentRequest } from "@/types/models";
 
-export function DepartmentCoordination() {
+interface DepartmentCoordinationProps {
+    /** Passed through so each request card can open that request's detail
+     * sheet in the Departments module (?record=<request.id>). */
+    onNavigate?: (page: string, record?: string) => void;
+}
+
+export function DepartmentCoordination({ onNavigate }: DepartmentCoordinationProps) {
     const repository = getRepository();
     const { data: requests, isLoading, error, refetch } = useData(() =>
         repository.getDepartmentRequests()
@@ -121,12 +127,13 @@ export function DepartmentCoordination() {
 
                     {!isLoading &&
                         !error &&
-                        visible.map((req) => (
-                            <div
-                                key={req.id}
-                                className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-md bg-white text-sm shadow-sm gap-2"
-                            >
-                                <div className="min-w-0">
+                        visible.map((req) => {
+                            // The clickable region is the request info itself,
+                            // kept as a sibling of the Approve/Reject buttons so
+                            // no interactive element nests inside another and
+                            // the review actions never trigger navigation.
+                            const info = (
+                                <>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium">{req.department}</span>
                                         <StatusChip
@@ -135,20 +142,42 @@ export function DepartmentCoordination() {
                                             className="text-[10px] px-1.5 py-0"
                                         />
                                     </div>
-                                    <div className="text-muted-foreground text-xs truncate">{req.activity}</div>
-                                </div>
+                                    <div className="text-muted-foreground text-xs overflow-hidden h-6 py-1" title={req.activity}>
+                                        {req.activity}
+                                    </div>
+                                </>
+                            );
 
-                                <div className="flex items-center gap-2 shrink-0">
+                            return (
+                                <div
+                                    key={req.id}
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-md bg-white text-sm shadow-sm gap-2"
+                                >
+                                    {onNavigate ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => onNavigate("departments", req.id)}
+                                            title="Open request details"
+                                            className="flex-1 min-w-[120px] text-left cursor-pointer rounded transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                                        >
+                                            {info}
+                                        </button>
+                                    ) : (
+                                        <div className="flex-1 min-w-[120px]">{info}</div>
+                                    )}
+
+                                    <div className="flex items-center gap-2 shrink-0">
                                     <div className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-slate-700 font-mono text-xs">
                                         <Clock className="h-3 w-3" />
                                         {req.requestedWindowStart} – {req.requestedWindowEnd}
                                     </div>
+
                                     {req.status === "proposed" && (
-                                        <>
+                                        <div className="flex gap-1.5 max-w-xs">
                                             <button
                                                 type="button"
                                                 onClick={() => review(req, "approved")}
-                                                className="inline-flex items-center gap-1 h-6 px-2 rounded bg-blue text-white text-[11px] font-semibold hover:opacity-90"
+                                                className="flex-1 inline-flex items-center gap-1 h-6 px-2 rounded bg-blue text-white text-[11px] font-semibold hover:opacity-90"
                                             >
                                                 <ThumbsUp className="h-3 w-3" />
                                                 Approve
@@ -156,15 +185,16 @@ export function DepartmentCoordination() {
                                             <button
                                                 type="button"
                                                 onClick={() => review(req, "rejected")}
-                                                className="h-6 px-2 rounded border text-[11px] font-semibold text-red hover:bg-red-bg"
+                                                className="flex-1 h-6 px-2 rounded border text-[11px] font-semibold text-red hover:bg-red-bg"
                                             >
                                                 Reject
                                             </button>
-                                        </>
+                                        </div>
                                     )}
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
 
                     <div className="pt-3 border-t">
                         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-lg p-4">

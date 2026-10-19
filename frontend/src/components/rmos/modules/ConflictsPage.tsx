@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     CheckCircle2,
     CircleAlert,
@@ -53,7 +53,7 @@ const CATEGORY_OPTIONS = [
     { value: "Safety Conflict", label: "Safety" }
 ];
 
-export function ConflictsPage() {
+export function ConflictsPage({ record }: { record?: string | null }) {
     const { conflicts: conflictsState, sections, refresh } = useModuleData();
     const { toast } = useToast();
 
@@ -69,6 +69,26 @@ export function ConflictsPage() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const selected = conflicts.find((conflict) => conflict.id === selectedId) ?? null;
+
+    // Notification deep link (?record=A12): open the first conflict affecting
+    // the referenced section once the register has loaded, or explain when the
+    // section has no recorded conflict.
+    const appliedRecord = useRef<string | null>(null);
+    useEffect(() => {
+        const key = record?.trim();
+        if (!key || appliedRecord.current === key || conflictsState.isLoading) return;
+        const match = conflicts.find((conflict) =>
+            conflict.sectionIds.some(
+                (sectionId) => sectionId.toUpperCase() === key.toUpperCase()
+            )
+        );
+        appliedRecord.current = key;
+        if (match) {
+            setSelectedId(match.id);
+        } else if (!conflictsState.error) {
+            toast(`Linked record ${key} was not found in the conflict register.`, "warning");
+        }
+    }, [record, conflicts, conflictsState.isLoading, conflictsState.error, toast]);
 
     const sectionName = (sectionId: string) =>
         sections.data?.find((section) => section.id === sectionId)?.name ?? sectionId;

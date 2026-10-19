@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     AlertTriangle,
     CalendarClock,
@@ -60,7 +60,7 @@ const CRITICALITY_OPTIONS = [
     { value: "low", label: "Low" }
 ];
 
-export function MaintenancePage() {
+export function MaintenancePage({ record }: { record?: string | null }) {
     const { tasks: tasksState, sections, refresh } = useModuleData();
     const { toast } = useToast();
 
@@ -76,6 +76,26 @@ export function MaintenancePage() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const selected = tasks.find((task) => task.id === selectedId) ?? null;
+
+    // Notification deep link (?record=TRC-103): open the linked work order's
+    // detail sheet once the queue has loaded, or surface a clear message when
+    // the referenced record does not exist in the data.
+    const appliedRecord = useRef<string | null>(null);
+    useEffect(() => {
+        const key = record?.trim();
+        if (!key || appliedRecord.current === key || tasksState.isLoading) return;
+        const match = tasks.find(
+            (task) =>
+                task.taskCode.toUpperCase() === key.toUpperCase() ||
+                task.workOrder.toUpperCase() === key.toUpperCase()
+        );
+        appliedRecord.current = key;
+        if (match) {
+            setSelectedId(match.id);
+        } else if (!tasksState.error) {
+            toast(`Linked record ${key} was not found in the maintenance queue.`, "warning");
+        }
+    }, [record, tasks, tasksState.isLoading, tasksState.error, toast]);
 
     const sectionName = (sectionId: string) =>
         sections.data?.find((section) => section.id === sectionId)?.name ?? sectionId;

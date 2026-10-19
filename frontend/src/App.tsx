@@ -138,10 +138,13 @@ function AuthenticatedLayout() {
     }, [navigate]);
 
     // Navigation goes through the URL so every module is linkable and
-    // refreshable, instead of living only in component state.
-    const navigatePage = (page: string) => {
+    // refreshable, instead of living only in component state. The optional
+    // `record` deep-links a specific record inside the module (e.g. a
+    // notification about work order TRC-103 opens /maintenance?record=TRC-103).
+    const navigatePage = (page: string, record?: string) => {
         const target = VALID_PAGES.has(page) ? page : "dashboard";
-        navigate(target === "dashboard" ? "/dashboard" : `/${target}`);
+        const base = target === "dashboard" ? "/dashboard" : `/${target}`;
+        navigate(record && target !== "dashboard" ? `${base}?record=${encodeURIComponent(record)}` : base);
     };
 
     return (
@@ -153,7 +156,10 @@ function AuthenticatedLayout() {
 
 /** Page renderer for authenticated routes */
 function PageRenderer() {
-    const { activePage, onNavigate } = useOutletContext<{ activePage: string; onNavigate: (page: string) => void }>();
+    const { activePage, onNavigate } = useOutletContext<{
+        activePage: string;
+        onNavigate: (page: string, record?: string) => void;
+    }>();
 
     // An unknown module id (e.g. a stale bookmark) goes back to the dashboard
     // rather than rendering an empty module page.

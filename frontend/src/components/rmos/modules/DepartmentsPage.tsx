@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     CheckCircle2,
     Clock,
@@ -46,7 +46,7 @@ const DEPARTMENT_OPTIONS = [
     ...DEMO_DEPARTMENTS.map((department) => ({ value: department, label: department }))
 ];
 
-export function DepartmentsPage() {
+export function DepartmentsPage({ record }: { record?: string | null }) {
     const { requests: requestsState, sections, refresh } = useModuleData();
     const { toast } = useToast();
 
@@ -61,6 +61,27 @@ export function DepartmentsPage() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const selected = requests.find((request) => request.id === selectedId) ?? null;
+
+    // Notification deep link (?record=A12) and dashboard deep link
+    // (?record=req-3): open the matching department request once the data has
+    // loaded, or explain when no request matches. Sections resolve to the first
+    // request filed for them; request ids resolve to that exact request.
+    const appliedRecord = useRef<string | null>(null);
+    useEffect(() => {
+        const key = record?.trim();
+        if (!key || appliedRecord.current === key || requestsState.isLoading) return;
+        const match = requests.find(
+            (request) =>
+                request.id === key ||
+                request.sectionId.toUpperCase() === key.toUpperCase()
+        );
+        appliedRecord.current = key;
+        if (match) {
+            setSelectedId(match.id);
+        } else if (!requestsState.error) {
+            toast(`Linked record ${key} was not found in department requests.`, "warning");
+        }
+    }, [record, requests, requestsState.isLoading, requestsState.error, toast]);
 
     const sectionName = (sectionId: string) =>
         sections.data?.find((section) => section.id === sectionId)?.name ?? sectionId;

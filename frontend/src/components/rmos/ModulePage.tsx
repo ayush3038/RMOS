@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/rmos/PageHeader";
 import { DemoBanner } from "@/components/rmos/DemoBanner";
@@ -67,7 +68,10 @@ const HEADER_ACTIONS: Record<string, { label: string; message: string }> = {
     }
 };
 
-const PAGES: Record<string, ComponentType> = {
+/** Module pages may receive a `record` deep-link (e.g. ?record=TRC-103) so a
+ * notification can open its linked record's detail sheet instead of only the
+ * generic list. Pages without a record-level detail view ignore the prop. */
+const PAGES: Record<string, ComponentType<{ record?: string | null }>> = {
     planner: PlannerPage,
     maintenance: MaintenancePage,
     trains: TrainsPage,
@@ -82,6 +86,8 @@ const PAGES: Record<string, ComponentType> = {
 
 export function ModulePage({ page, title, description }: ModulePageProps) {
     const { toast } = useToast();
+    const [searchParams] = useSearchParams();
+    const record = searchParams.get("record");
     const action = HEADER_ACTIONS[page];
     const PageContent = PAGES[page];
 
@@ -116,7 +122,11 @@ export function ModulePage({ page, title, description }: ModulePageProps) {
 
             <DemoBanner />
 
-            {PageContent ? <PageContent /> : <EmptyState message="This module has no content yet." />}
+            {PageContent ? (
+                <PageContent record={record} />
+            ) : (
+                <EmptyState message="This module has no content yet." />
+            )}
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     CheckCircle2,
     Download,
@@ -50,7 +50,7 @@ const STATUS_OPTIONS = [
     { value: "failed", label: "Failed" }
 ];
 
-export function ReportsPage() {
+export function ReportsPage({ record }: { record?: string | null }) {
     const { reports: reportsState, refresh } = useModuleData();
     const { toast } = useToast();
 
@@ -65,6 +65,23 @@ export function ReportsPage() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const selected = reports.find((report) => report.id === selectedId) ?? null;
+
+    // Notification deep link (?record=RPT-202603): open the referenced report's
+    // detail sheet once the library has loaded, or explain when it is missing.
+    const appliedRecord = useRef<string | null>(null);
+    useEffect(() => {
+        const key = record?.trim();
+        if (!key || appliedRecord.current === key || reportsState.isLoading) return;
+        const match = reports.find(
+            (report) => report.reportCode.toUpperCase() === key.toUpperCase()
+        );
+        appliedRecord.current = key;
+        if (match) {
+            setSelectedId(match.id);
+        } else if (!reportsState.error) {
+            toast(`Linked record ${key} was not found in the report library.`, "warning");
+        }
+    }, [record, reports, reportsState.isLoading, reportsState.error, toast]);
 
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase();

@@ -7,7 +7,7 @@ import { AUTO_REFRESH_EVENT } from "@/hooks/useData";
 interface AppShellProps {
     children: React.ReactNode;
     activePage: string;
-    onNavigate: (page: string) => void;
+    onNavigate: (page: string, record?: string) => void;
 }
 
 export function AppShell({ children, activePage, onNavigate }: AppShellProps) {

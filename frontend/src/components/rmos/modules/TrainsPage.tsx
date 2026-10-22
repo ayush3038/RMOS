@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     CircleDot,
     Gauge,
@@ -50,7 +50,7 @@ const TYPE_OPTIONS = [
     { value: "Inspection", label: "Inspection" }
 ];
 
-export function TrainsPage() {
+export function TrainsPage({ record }: { record?: string | null }) {
     const { trains: trainsState, sections, refresh } = useModuleData();
     const { toast } = useToast();
 
@@ -65,6 +65,23 @@ export function TrainsPage() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const selected = trains.find((train) => train.id === selectedId) ?? null;
+
+    // Notification deep link (?record=12037): open the linked service's detail
+    // sheet once the list has loaded, or explain when the record is missing.
+    const appliedRecord = useRef<string | null>(null);
+    useEffect(() => {
+        const key = record?.trim();
+        if (!key || appliedRecord.current === key || trainsState.isLoading) return;
+        const match = trains.find(
+            (train) => train.trainNumber.toUpperCase() === key.toUpperCase()
+        );
+        appliedRecord.current = key;
+        if (match) {
+            setSelectedId(match.id);
+        } else if (!trainsState.error) {
+            toast(`Linked record ${key} was not found in train operations.`, "warning");
+        }
+    }, [record, trains, trainsState.isLoading, trainsState.error, toast]);
 
     const sectionName = (sectionId: string) =>
         sections.data?.find((section) => section.id === sectionId)?.name ?? sectionId;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Activity,
     Gauge,
@@ -46,7 +46,7 @@ const STATUS_COLOR: Record<AvailabilityStatus, string> = {
     blocked: "bg-red"
 };
 
-export function CorridorPage() {
+export function CorridorPage({ record }: { record?: string | null }) {
     const { sections: sectionsState, refresh } = useModuleData();
     const { toast } = useToast();
 
@@ -61,6 +61,24 @@ export function CorridorPage() {
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
     const selected = sections.find((section) => section.id === selectedId) ?? null;
+
+    // Notification deep link (?record=A12): open the referenced corridor
+    // section's detail sheet once the data has loaded, or explain when the
+    // section does not exist.
+    const appliedRecord = useRef<string | null>(null);
+    useEffect(() => {
+        const key = record?.trim();
+        if (!key || appliedRecord.current === key || sectionsState.isLoading) return;
+        const match = sections.find(
+            (section) => section.id.toUpperCase() === key.toUpperCase()
+        );
+        appliedRecord.current = key;
+        if (match) {
+            setSelectedId(match.id);
+        } else if (!sectionsState.error) {
+            toast(`Linked record ${key} was not found in corridor sections.`, "warning");
+        }
+    }, [record, sections, sectionsState.isLoading, sectionsState.error, toast]);
 
     const corridorOptions = useMemo(
         () => [

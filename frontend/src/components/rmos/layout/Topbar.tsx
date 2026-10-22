@@ -9,7 +9,8 @@ import {
     Search,
     Settings,
     Siren,
-    Check
+    Check,
+    Trash2
 } from "lucide-react";
 import { SimulatorControls } from "./SimulatorControls";
 import { NAV_ITEMS } from "@/config/navigation";
@@ -18,29 +19,18 @@ import { useLogout } from "@/hooks/useLogout";
 import { getRepository } from "@/services/api";
 import { getSessionUser } from "@/services/api/session";
 import { relativeTime } from "@/lib/format";
+import { resolveEventLink } from "@/lib/eventLinks";
+import { NotificationDetailSheet } from "@/components/rmos/notifications/NotificationDetailSheet";
+import { useToast } from "@/store/toast";
 import { cn } from "@/lib/utils";
 import type { OperationalEvent } from "@/types/models";
 
 interface TopbarProps {
     onOpenSidebar: () => void;
     activePage: string;
-    onNavigate: (page: string) => void;
+    onNavigate: (page: string, record?: string) => void;
     workspaceName?: string;
 }
-
-const EVENT_TARGET: Record<OperationalEvent["type"], string> = {
-    conflict_detected: "conflicts",
-    conflict_resolved: "conflicts",
-    request_added: "departments",
-    request_reviewed: "departments",
-    maintenance_updated: "maintenance",
-    block_changed: "planner",
-    block_approved: "planner",
-    train_delayed: "trains",
-    train_scheduled: "trains",
-    asset_flagged: "corridor",
-    report_generated: "reports"
-};
 
 const SEVERITY_DOT: Record<OperationalEvent["severity"], string> = {
     critical: "bg-red",
@@ -58,6 +48,7 @@ export function Topbar({
     const { data: events } = useData(() => repository.getRecentEvents());
     const { data: kpis } = useData(() => repository.getDashboardKpis());
     const logout = useLogout();
+    const { toast } = useToast();
 
     const [query, setQuery] = useState("");
     const [searchOpen, setSearchOpen] = useState(false);
@@ -65,6 +56,11 @@ export function Topbar({
     const [helpOpen, setHelpOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [readIds, setReadIds] = useState<string[]>([]);
+    // Client-side deletions: the feed comes from the read-only demo repository
+    // (no delete API exists), so removed ids are tracked here instead.
+    const [deletedIds, setDeletedIds] = useState<string[]>([]);
+    // Fallback sheet for notifications that cannot open a specific record.
+    const [detailEvent, setDetailEvent] = useState<OperationalEvent | null>(null);
     const searchRef = useRef<HTMLDivElement>(null);
     const profileRef = useRef<HTMLDivElement>(null);
 
@@ -80,9 +76,15 @@ export function Topbar({
         );
     }, [query]);
 
-    const unread = (events ?? []).filter((event) => !readIds.includes(event.id));
+    // The list, the unread count and the bell badge all derive from the same
+    // visible set, so a deletion updates them immediately in one state change.
+    const visibleEvents = useMemo(
+        () => (events ?? []).filter((event) => !deletedIds.includes(event.id)),
+        [events, deletedIds]
+    );
+    const unread = visibleEvents.filter((event) => !readIds.includes(event.id));
     const alertCount = unread.filter((event) => event.severity !== "info").length;
-    const latest = events?.[0];
+    const latest = visibleEvents[0];
 
     useEffect(() => {
         const onClickOutside = (event: MouseEvent) => {
@@ -99,6 +101,7 @@ export function Topbar({
                 setProfileOpen(false);
                 setNotificationsOpen(false);
                 setHelpOpen(false);
+                setDetailEvent(null);
             }
         };
         document.addEventListener("mousedown", onClickOutside);
@@ -116,18 +119,49 @@ export function Topbar({
         setSearchOpen(false);
     };
 
-    const goTo = (page: string) => {
-        onNavigate(page);
+    const goTo = (page: string, record?: string) => {
+        onNavigate(page, record);
         setQuery("");
         closeAll();
+    };
+
+    /** Deletes exactly one notification from the visible feed. */
+    const deleteNotification = (event: OperationalEvent) => {
+        setDeletedIds((previous) =>
+            previous.includes(event.id) ? previous : [...previous, event.id]
+        );
+        toast("Notification deleted.", "info");
+    };
+
+    /** Confirmed bulk delete of every visible notification. */
+    const clearAllNotifications = () => {
+        if (visibleEvents.length === 0) return;
+        const confirmed = window.confirm(
+            `Delete all ${visibleEvents.length} notifications? This cannot be undone.`
+        );
+        if (!confirmed) return;
+        setDeletedIds((events ?? []).map((event) => event.id));
+        toast(`All ${visibleEvents.length} notifications cleared.`, "info");
     };
 
     const openEvent = (event: OperationalEvent) => {
         setReadIds((previous) =>
             previous.includes(event.id) ? previous : [...previous, event.id]
         );
-        goTo(EVENT_TARGET[event.type] ?? "dashboard");
+        setNotificationsOpen(false);
+        const link = resolveEventLink(event);
+        if (link.record) {
+            // The event references a known record: deep-link into the module so
+            // its detail sheet opens for that record.
+            goTo(link.page, link.record);
+        } else {
+            // No usable identifier (or no record-level detail view): show the
+            // notification details instead of silently redirecting.
+            setDetailEvent(event);
+        }
     };
+
+    const detailLink = detailEvent ? resolveEventLink(detailEvent) : null;
 
     return (
         <header className="h-[56px] shrink-0 bg-surface border-b border-border flex items-center justify-between px-2.5 lg:px-[18px] gap-3.5">
@@ -146,7 +180,11 @@ export function Topbar({
                     </div>
                     <div className="text-[11px] text-muted truncate hidden md:block leading-tight mt-0.5">
                         Week {weekNumber()} &middot; 2026 &middot; Data: Simulation &middot;{" "}
-                        {latest ? `latest event ${relativeTime(latest.timestamp)}` : "loading events"}
+                        {latest
+                            ? `latest event ${relativeTime(latest.timestamp)}`
+                            : events
+                              ? "no recent events"
+                              : "loading events"}
                         {kpis ? ` · ${kpis.trainsRunning} trains running` : ""}
                     </div>
                 </div>
@@ -236,54 +274,88 @@ export function Topbar({
                     {notificationsOpen && (
                         <>
                             <div className="fixed inset-0 z-40" onClick={() => setNotificationsOpen(false)} />
-                            <div className="absolute right-0 top-[40px] z-50 w-[330px] rounded-md border bg-surface shadow-md overflow-hidden">
-                                <div className="flex items-center justify-between px-3 py-2 border-b bg-slate-50">
+                            <div className="absolute right-0 top-[40px] z-50 w-[330px] max-w-[calc(100vw-1rem)] rounded-md border bg-surface shadow-md overflow-hidden">
+                                <div className="flex items-center justify-between gap-2 px-3 py-2 border-b bg-slate-50">
                                     <span className="text-[12.5px] font-semibold">
                                         Operations feed
                                     </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => setReadIds((events ?? []).map((event) => event.id))}
-                                        className="inline-flex items-center gap-1 text-[11.5px] text-blue hover:underline"
-                                    >
-                                        <Check className="w-3 h-3" />
-                                        Mark all read
-                                    </button>
+                                    <div className="flex items-center gap-2.5 shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => setReadIds((events ?? []).map((event) => event.id))}
+                                            className="inline-flex items-center gap-1 text-[11.5px] text-blue hover:underline"
+                                        >
+                                            <Check className="w-3 h-3" />
+                                            Mark all read
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={clearAllNotifications}
+                                            disabled={visibleEvents.length === 0}
+                                            title="Delete all notifications"
+                                            className="inline-flex items-center gap-1 text-[11.5px] text-red hover:underline disabled:opacity-50 disabled:no-underline"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                            Clear all
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="max-h-[320px] overflow-y-auto">
-                                    {(events ?? []).slice(0, 10).map((event) => {
+                                    {visibleEvents.slice(0, 10).map((event) => {
                                         const isRead = readIds.includes(event.id);
                                         return (
-                                            <button
+                                            <div
                                                 key={event.id}
-                                                type="button"
-                                                onClick={() => openEvent(event)}
                                                 className={cn(
-                                                    "w-full text-left px-3 py-2.5 border-b border-border-soft last:border-0 hover:bg-accent transition-colors",
+                                                    "group relative border-b border-border-soft last:border-0",
                                                     isRead && "opacity-60"
                                                 )}
                                             >
-                                                <div className="flex items-start gap-2">
-                                                    <span
-                                                        className={cn(
-                                                            "w-2 h-2 rounded-full mt-1.5 shrink-0",
-                                                            SEVERITY_DOT[event.severity]
-                                                        )}
-                                                    />
-                                                    <span className="min-w-0">
-                                                        <span className="block text-[12.5px] text-ink leading-snug">
-                                                            {event.message}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openEvent(event)}
+                                                    className="w-full text-left px-3 py-2.5 pr-9 hover:bg-accent transition-colors"
+                                                >
+                                                    <div className="flex items-start gap-2">
+                                                        <span
+                                                            className={cn(
+                                                                "w-2 h-2 rounded-full mt-1.5 shrink-0",
+                                                                SEVERITY_DOT[event.severity]
+                                                            )}
+                                                        />
+                                                        <span className="min-w-0">
+                                                            <span className="block text-[12.5px] text-ink leading-snug">
+                                                                {event.message}
+                                                            </span>
+                                                            <span className="block text-[11px] text-muted mt-0.5">
+                                                                {event.actor} · {relativeTime(event.timestamp)}
+                                                            </span>
                                                         </span>
-                                                        <span className="block text-[11px] text-muted mt-0.5">
-                                                            {event.actor} · {relativeTime(event.timestamp)}
-                                                        </span>
-                                                    </span>
-                                                </div>
-                                            </button>
+                                                    </div>
+                                                </button>
+                                                {/* Separate button so deleting never triggers navigation. */}
+                                                <button
+                                                    type="button"
+                                                    onClick={(clickEvent) => {
+                                                        clickEvent.stopPropagation();
+                                                        deleteNotification(event);
+                                                    }}
+                                                    aria-label={`Delete notification: ${event.message}`}
+                                                    title="Delete notification"
+                                                    className={cn(
+                                                        "absolute right-2 top-2 w-6 h-6 rounded flex items-center justify-center text-muted",
+                                                        "hover:text-red hover:bg-red-bg transition-opacity",
+                                                        "focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                                                        "opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                                                    )}
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
                                         );
                                     })}
-                                    {(events ?? []).length === 0 && (
+                                    {visibleEvents.length === 0 && (
                                         <p className="px-3 py-4 text-[12.5px] text-muted text-center">
                                             No operational events yet.
                                         </p>
@@ -452,6 +524,19 @@ export function Topbar({
                     )}
                 </div>
             </div>
+
+            {/* Notification-detail fallback when no specific record can be opened. */}
+            <NotificationDetailSheet
+                event={detailEvent}
+                link={detailLink}
+                onOpenChange={(open) => {
+                    if (!open) setDetailEvent(null);
+                }}
+                onOpenModule={(link) => {
+                    setDetailEvent(null);
+                    goTo(link.page);
+                }}
+            />
         </header>
     );
 }

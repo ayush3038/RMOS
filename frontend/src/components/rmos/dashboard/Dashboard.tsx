@@ -11,7 +11,9 @@ import { ActivityFeed } from "./ActivityFeed";
 import { FileText, Play } from "lucide-react";
 
 interface DashboardProps {
-    onNavigate: (page: string) => void;
+    /** Shared router navigation; `record` deep-links a specific record
+     * (e.g. a corridor section or a department request). */
+    onNavigate: (page: string, record?: string) => void;
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
@@ -53,14 +55,14 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
             <DemoBanner />
 
-            <DashboardKpis />
+            <DashboardKpis onNavigate={onNavigate} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2">
-                    <CorridorOverview />
+                    <CorridorOverview onNavigate={onNavigate} />
                 </div>
                 <div className="lg:col-span-1">
-                    <DepartmentCoordination />
+                    <DepartmentCoordination onNavigate={onNavigate} />
                 </div>
             </div>
 
